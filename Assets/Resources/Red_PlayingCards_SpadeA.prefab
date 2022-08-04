@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 4503351179994121972}
   - component: {fileID: -38311143131270130}
   - component: {fileID: -5964571995702652678}
+  - component: {fileID: 1112984071558061512}
   m_Layer: 0
   m_Name: Red_PlayingCards_SpadeA
   m_TagString: Untagged
@@ -181,3 +182,18 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 5.6960616, y: 0.00000017695129, z: 8.872102}
   m_Center: {x: 0, y: -9.313226e-10, z: 0}
+--- !u!114 &1112984071558061512
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1102907449829192419}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 552d3409f2cf3e44bbd37217d1901989, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  suit: 
+  rank: 
+  view: {fileID: 0}
