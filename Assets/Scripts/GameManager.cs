@@ -53,8 +53,8 @@ public class GameManager : MonoBehaviourPunCallbacks
         isMasterTurn = true;
         view = gameObject.GetComponent<PhotonView>();
         hits = new List<ARRaycastHit>();
-        //state = GameState.Waiting;
-        view.RPC("ChangeState", RpcTarget.All, GameState.Waiting);
+        state = GameState.Waiting;
+        //view.RPC("ChangeState", RpcTarget.All, GameState.Waiting);
         roomNameTxt.text = PhotonNetwork.CurrentRoom.Name;
         countPlayer.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString() + "/" + PhotonNetwork.CurrentRoom.MaxPlayers.ToString();
         if(PhotonNetwork.IsMasterClient)
@@ -63,7 +63,9 @@ public class GameManager : MonoBehaviourPunCallbacks
     }
     private void Update()
     {
-        if(PhotonNetwork.IsMasterClient && state == GameState.Ready)
+
+        Debug.Log(state.ToString());
+        if (PhotonNetwork.IsMasterClient && state == GameState.Ready)
         {
             Vector2 screemPos = Camera.main.ViewportToScreenPoint(new Vector2(0.5f, 0.5f));
             if(arRaycatManager.Raycast(screemPos,hits, UnityEngine.XR.ARSubsystems.TrackableType.Planes))
@@ -144,8 +146,8 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         if(PhotonNetwork.CurrentRoom.PlayerCount == 2)
         {
-            //state = GameState.Ready;
-            view.RPC("ChangeState", RpcTarget.All, GameState.Ready);
+            state = GameState.Ready;
+            //view.RPC("ChangeState", RpcTarget.All, GameState.Ready);
         }
         notifyTxt.text = "Player " + newPlayer.UserId.Substring(0,3) + "joined";
         countPlayer.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString() + "/" + PhotonNetwork.CurrentRoom.MaxPlayers.ToString();
