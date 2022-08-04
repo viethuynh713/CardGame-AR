@@ -9,7 +9,12 @@ public class Card : MonoBehaviour
     public string suit;
     public string rank;
     public PhotonView view;
-
+    private void Start()
+    {
+        view = gameObject.GetComponent<PhotonView>();
+        transform.localPosition = new Vector3(0,0.85f,0);
+        transform.localEulerAngles = new Vector3(0, 0, 180);
+    }
     public Card(string suit,string rank)
     {
         this.suit = suit;
@@ -17,9 +22,6 @@ public class Card : MonoBehaviour
     }
     public void MoveTo(Vector3 pos)
     {
-        view = gameObject.GetComponent<PhotonView>();
-        transform.localPosition = Vector3.zero;
-        transform.localEulerAngles = new Vector3(0, 0, 180);
         transform.DOLocalMove(pos, 2f).SetEase(Ease.OutCubic);
     }
     [PunRPC]
