@@ -99,6 +99,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                     Touch touch = Input.GetTouch(0);
                     if (touch.phase == TouchPhase.Began)
                     {
+                        Debug.Log("1211212121");
                         Ray ray = ARcamera.ScreenPointToRay(touch.position);
                         RaycastHit hit;
                         if (Physics.Raycast(ray, out hit))
@@ -121,11 +122,12 @@ public class GameManager : MonoBehaviourPunCallbacks
     [PunRPC]
     public void ChangeTurn()
     {
+        Debug.Log("Change turn");
         isMasterTurn = !isMasterTurn;
     }
     IEnumerator CompareWithTargetCard(Card selected)
     {
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(1.5f);
         if(target.suit == selected.suit && target.rank == selected.rank)
         {
             // state = GameState.End;
@@ -136,9 +138,8 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
         else
         {
-            view.RPC("ChangeTurn", RpcTarget.All);
             selected.view.RPC("Flip", RpcTarget.All);
-            //selected.Flip();
+            view.RPC("ChangeTurn", RpcTarget.All);
         }
     }
 
@@ -214,6 +215,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     public void ChangeState(GameState st)
     {
         state = st;
+        Debug.Log("Change state");
     }
     [PunRPC]
     public void EndGame()

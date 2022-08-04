@@ -18,7 +18,7 @@ public class InitBoard : MonoBehaviour
                 //var obj = Instantiate(pre, transform);
                 var idx = (z + 1) * 8 + x + 3;
                 var obj = PhotonNetwork.Instantiate("Red_PlayingCards_" + GameManager.instance.listCard[idx].suit + GameManager.instance.listCard[idx].rank, gameObject.transform.position, Quaternion.identity);
-                obj.transform.SetParent(transform);
+                //obj.transform.SetParent(transform);
                 obj.GetComponent<Card>().suit = GameManager.instance.listCard[idx].suit;
                 obj.GetComponent<Card>().rank = GameManager.instance.listCard[idx].rank;
 

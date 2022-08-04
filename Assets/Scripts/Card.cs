@@ -27,6 +27,7 @@ public class Card : MonoBehaviour
     [PunRPC]
     public void Flip()
     {
+        Debug.Log("Flip....,.,.,.");
         Sequence sq = DOTween.Sequence();
         sq.Append(transform.DOLocalMoveY(1f, 0.2f));
 
