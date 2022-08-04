@@ -11,7 +11,7 @@ public class ChangeColor : MonoBehaviour
 {
     [SerializeField] private Color colorSelected = Color.red;
     [SerializeField] private Camera ARcamera;
-    private Vector2 touchPOS;
+    private Vector3 touchPOS;
     private ARRaycastManager arRaycastManager;
 
     private List<ARRaycastHit> hitAR;
@@ -77,10 +77,53 @@ public class ChangeColor : MonoBehaviour
             }
         }
 
+        if(Input.GetMouseButton(0))
+        {
+            touchPOS =Input.mousePosition;
+            Debug.Log(touchPOS);
+            Ray ray = ARcamera.ScreenPointToRay(touchPOS);
+            RaycastHit hit;
+            if (Physics.Raycast(ray, out hit) && Input.GetMouseButtonDown(0))
+            {
+                CubeObject objSelected = hit.collider.GetComponent<CubeObject>();
+                if (objSelected != null)
+                {
+                    objSelected.ChangeColor(colorSelected);
+                    notifyTxt.text = "Color Changed";
+                    
+                }
+                else
+                {
+                    SpawnPlacedObject();
+                }
+            }
+            if(!Input.GetMouseButtonUp(0))
+            {
+            if (Physics.Raycast(ray, out hit))
+            {
+                CubeObject objSelected = hit.collider.GetComponent<CubeObject>();
+                if (objSelected != null)
+                {
+                
+                    if (arRaycastManager.Raycast(touchPOS, hitAR, UnityEngine.XR.ARSubsystems.TrackableType.Planes))
+                        {
+                            notifyTxt.text = "Move to: " + hitAR[0].pose.position;
+                            objSelected.ChangePosition(hitAR[0].pose.position);
+                            
+
+                        }
+                }
+
+            }
+            }
+        }
+        
+        
 
 
 
     }
+
     private void SpawnPlacedObject()
     {
         if (arRaycastManager.Raycast(touchPOS, hitAR, UnityEngine.XR.ARSubsystems.TrackableType.Planes))

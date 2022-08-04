@@ -43,6 +43,11 @@ MonoBehaviour:
   - SpawnPlacedObject
   - ChangeColor
   - ChangeColorAll
+  - Flip
+  - SetTargetCard
+  - ChangeState
+  - ChangeTurn
+  - EndGame
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

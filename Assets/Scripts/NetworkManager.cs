@@ -65,8 +65,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
         RoomOptions options = new RoomOptions()
         {
-            MaxPlayers = 4,
+            MaxPlayers = 2,
             IsVisible = true,
+            PublishUserId = true
 
         };
         PhotonNetwork.CreateRoom(name.text,options,TypedLobby.Default);
@@ -99,7 +100,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     }
     public override void OnJoinRandomFailed(short returnCode, string message)
     {
-        PhotonNetwork.CreateRoom(null, new RoomOptions() { MaxPlayers = 4,IsVisible = true, }, TypedLobby.Default);
+        PhotonNetwork.CreateRoom(null, new RoomOptions() { MaxPlayers = 2,IsVisible = true, PublishUserId = true }, TypedLobby.Default);
         
     }
 
