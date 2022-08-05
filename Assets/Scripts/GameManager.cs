@@ -25,7 +25,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     [SerializeField] private RawImage targetCardImg;
 
     [Header("Prefabs")]
-    private GameObject table;
+    public GameObject table;
 
     [Header("AR component")]
     [SerializeField] private ARRaycastManager arRaycatManager;

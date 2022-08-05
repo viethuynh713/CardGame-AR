@@ -43,6 +43,11 @@ public class Card : MonoBehaviour
         sq.Append(transform.DOLocalMoveY(0.85f, 0.2f));
         //view.RPC("Flip", RpcTarget.Others);
     }
+    [PunRPC]
+    public void SetParent()
+    {
+        gameObject.transform.SetParent(GameManager.instance.table.transform);
+    }
     
     public override bool Equals(object other)
     {
