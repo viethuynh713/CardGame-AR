@@ -88,23 +88,23 @@ public class GameManager : MonoBehaviourPunCallbacks
         {
             if ((isMasterTurn && PhotonNetwork.IsMasterClient) || (!isMasterTurn && !PhotonNetwork.IsMasterClient))
             {
-                if (Input.GetMouseButtonDown(0))
-                {
-                    Ray ray = ARcamera.ScreenPointToRay(Input.mousePosition);
-                    RaycastHit hit;
-                    if (Physics.Raycast(ray, out hit))
-                    {
-                        var cardSelected = hit.collider.GetComponent<Card>();
-                        Debug.Log(cardSelected);
-                        if (cardSelected != null)
-                        {
-                            cardSelected.view.RPC("FlipUp", RpcTarget.All);
-                            //cardSelected.Flip();
-                            //Debug.Log(target.rank + target.suit + "--" + cardSelected.rank + cardSelected.suit);
-                            StartCoroutine(CompareWithTargetCard(cardSelected));
-                        }
-                    }
-                }
+                //if (Input.GetMouseButtonDown(0))
+                //{
+                //    Ray ray = ARcamera.ScreenPointToRay(Input.mousePosition);
+                //    RaycastHit hit;
+                //    if (Physics.Raycast(ray, out hit))
+                //    {
+                //        var cardSelected = hit.collider.GetComponent<Card>();
+                //        Debug.Log(cardSelected);
+                //        if (cardSelected != null)
+                //        {
+                //            cardSelected.view.RPC("FlipUp", RpcTarget.All);
+                //            //cardSelected.Flip();
+                //            //Debug.Log(target.rank + target.suit + "--" + cardSelected.rank + cardSelected.suit);
+                //            StartCoroutine(CompareWithTargetCard(cardSelected));
+                //        }
+                //    }
+                //}
                 if (Input.touchCount > 0)
                 {
                     Touch touch = Input.GetTouch(0);
