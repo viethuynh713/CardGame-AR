@@ -98,7 +98,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                         Debug.Log(cardSelected);
                         if (cardSelected != null)
                         {
-                            cardSelected.view.RPC("FlipUP", RpcTarget.All);
+                            cardSelected.view.RPC("FlipUp", RpcTarget.All);
                             //cardSelected.Flip();
                             //Debug.Log(target.rank + target.suit + "--" + cardSelected.rank + cardSelected.suit);
                             StartCoroutine(CompareWithTargetCard(cardSelected));
@@ -110,7 +110,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                     Touch touch = Input.GetTouch(0);
                     if (touch.phase == TouchPhase.Began)
                     {
-                        Debug.Log("1211212121");
+                        //Debug.Log("1211212121");
                         Ray ray = ARcamera.ScreenPointToRay(touch.position);
                         RaycastHit hit;
                         if (Physics.Raycast(ray, out hit))
@@ -119,6 +119,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                             Debug.Log(cardSelected);
                             if (cardSelected != null)
                             {
+                                Debug.Log("Touch");
                                 cardSelected.view.RPC("FlipUp", RpcTarget.All);
                                 //cardSelected.Flip();
                                 //Debug.Log(target.rank + target.suit + "--" + cardSelected.rank + cardSelected.suit);
