@@ -57,9 +57,19 @@ public class GameManager : MonoBehaviourPunCallbacks
         //view.RPC("ChangeState", RpcTarget.All, GameState.Waiting);
         roomNameTxt.text = PhotonNetwork.CurrentRoom.Name;
         countPlayer.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString() + "/" + PhotonNetwork.CurrentRoom.MaxPlayers.ToString();
-        if(PhotonNetwork.IsMasterClient)
-        table = PhotonNetwork.Instantiate("Table", Vector3.zero, Quaternion.identity);
+        if (PhotonNetwork.IsMasterClient)
+        {
+            var t = PhotonNetwork.Instantiate("Table", Vector3.zero, Quaternion.identity);
+            t.tag = "Table";
+            view.RPC("CreateTable", RpcTarget.All, "Table");
 
+        }
+
+    }
+    [PunRPC]
+    public void CreateTable(string tag)
+    {
+        table = GameObject.FindGameObjectWithTag("Table");
     }
     private void Update()
     {
