@@ -12,7 +12,7 @@ public class Card : MonoBehaviour
     private void Awake()
     {
         view = gameObject.GetComponent<PhotonView>();
-        transform.localPosition = new Vector3(0,0.85f,0);
+        transform.localPosition = new Vector3(0,0.2f,0);
         transform.localEulerAngles = new Vector3(0, 0, 180);
     }
     public Card(string suit,string rank)
@@ -28,17 +28,17 @@ public class Card : MonoBehaviour
     public void FlipDown()
     {
         Sequence sq = DOTween.Sequence();
-        sq.Append(transform.DOLocalMoveY(1f, 0.2f));
+        sq.Append(transform.DOLocalMoveY(0.4f, 0.2f));
         sq.Append(transform.DOLocalRotate(new Vector3(0,0,180), 0.2f));
-        sq.Append(transform.DOLocalMoveY(0.85f, 0.2f));
+        sq.Append(transform.DOLocalMoveY(0.2f, 0.2f));
     }
     [PunRPC]
     public void FlipUp()
     {
         Sequence sq = DOTween.Sequence();
-        sq.Append(transform.DOLocalMoveY(1f, 0.2f));
+        sq.Append(transform.DOLocalMoveY(0.4f, 0.2f));
         sq.Append(transform.DOLocalRotate(Vector3.zero, 0.2f));
-        sq.Append(transform.DOLocalMoveY(0.85f, 0.2f));
+        sq.Append(transform.DOLocalMoveY(0.2f, 0.2f));
     }
     [PunRPC]
     public void SetParent()
