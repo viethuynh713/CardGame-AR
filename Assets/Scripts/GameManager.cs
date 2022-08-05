@@ -61,13 +61,13 @@ public class GameManager : MonoBehaviourPunCallbacks
         {
             var t = PhotonNetwork.Instantiate("Table", Vector3.zero, Quaternion.identity);
             //t.tag = "Table";
-            view.RPC("CreateTable", RpcTarget.All, "Table");
+            view.RPC("CreateTable", RpcTarget.All);
 
         }
 
     }
     [PunRPC]
-    public void CreateTable(string tag)
+    public void CreateTable()
     {
         table = GameObject.FindGameObjectWithTag("Table");
     }
