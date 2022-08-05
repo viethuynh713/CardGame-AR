@@ -60,7 +60,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         if (PhotonNetwork.IsMasterClient)
         {
             var t = PhotonNetwork.Instantiate("Table", Vector3.zero, Quaternion.identity);
-            t.tag = "Table";
+            //t.tag = "Table";
             view.RPC("CreateTable", RpcTarget.All, "Table");
 
         }
