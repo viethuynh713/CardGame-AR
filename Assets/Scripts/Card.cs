@@ -9,7 +9,7 @@ public class Card : MonoBehaviour
     public string suit;
     public string rank;
     public PhotonView view;
-    private void Start()
+    private void Awake()
     {
         view = gameObject.GetComponent<PhotonView>();
         transform.localPosition = new Vector3(0,0.85f,0);
@@ -46,6 +46,7 @@ public class Card : MonoBehaviour
     [PunRPC]
     public void SetParent()
     {
+        Debug.Log("SetParent");
         gameObject.transform.SetParent(GameManager.instance.table.transform);
     }
     
