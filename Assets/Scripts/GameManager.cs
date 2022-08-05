@@ -98,7 +98,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                         Debug.Log(cardSelected);
                         if (cardSelected != null)
                         {
-                            cardSelected.view.RPC("Flip", RpcTarget.All);
+                            cardSelected.view.RPC("FlipUP", RpcTarget.All);
                             //cardSelected.Flip();
                             //Debug.Log(target.rank + target.suit + "--" + cardSelected.rank + cardSelected.suit);
                             StartCoroutine(CompareWithTargetCard(cardSelected));
@@ -119,7 +119,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                             Debug.Log(cardSelected);
                             if (cardSelected != null)
                             {
-                                cardSelected.view.RPC("Flip", RpcTarget.All);
+                                cardSelected.view.RPC("FlipUp", RpcTarget.All);
                                 //cardSelected.Flip();
                                 //Debug.Log(target.rank + target.suit + "--" + cardSelected.rank + cardSelected.suit);
                                 StartCoroutine(CompareWithTargetCard(cardSelected));
@@ -149,7 +149,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
         else
         {
-            selected.view.RPC("Flip", RpcTarget.All);
+            selected.view.RPC("FlipDown", RpcTarget.All);
             view.RPC("ChangeTurn", RpcTarget.All);
         }
     }

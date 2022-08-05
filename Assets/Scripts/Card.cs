@@ -25,23 +25,20 @@ public class Card : MonoBehaviour
         transform.DOLocalMove(pos, 2f).SetEase(Ease.OutCubic);
     }
     [PunRPC]
-    public void Flip()
+    public void FlipDown()
     {
-        Debug.Log("Flip....,.,.,.");
         Sequence sq = DOTween.Sequence();
         sq.Append(transform.DOLocalMoveY(1f, 0.2f));
-
-        if(transform.localEulerAngles.z >179)
-        {
-            sq.Append(transform.DOLocalRotate(Vector3.zero, 0.2f));
-        }
-        else
-        {
-            sq.Append(transform.DOLocalRotate(new Vector3(0,0,180), 0.2f));
-        }
-
+        sq.Append(transform.DOLocalRotate(new Vector3(0,0,180), 0.2f));
         sq.Append(transform.DOLocalMoveY(0.85f, 0.2f));
-        //view.RPC("Flip", RpcTarget.Others);
+    }
+    [PunRPC]
+    public void FlipUp()
+    {
+        Sequence sq = DOTween.Sequence();
+        sq.Append(transform.DOLocalMoveY(1f, 0.2f));
+        sq.Append(transform.DOLocalRotate(Vector3.zero, 0.2f));
+        sq.Append(transform.DOLocalMoveY(0.85f, 0.2f));
     }
     [PunRPC]
     public void SetParent()
