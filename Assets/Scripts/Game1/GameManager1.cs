@@ -70,12 +70,12 @@ public class GameManager1 : MonoBehaviourPunCallbacks
                 Debug.Log(x.rank + " "+ x.suit);
             });
             var json = JsonConvert.SerializeObject(listCard);
-            Debug.Log(json);
-            //view.RPC(nameof(InitMyCard), RpcTarget.All,json);
-            foreach (var i in PhotonNetwork.CurrentRoom.Players)
+            //Debug.Log(json);
+            view.RPC(nameof(InitMyCard), RpcTarget.Others,json);
+            /*foreach (var i in PhotonNetwork.CurrentRoom.Players)
             {
                 Debug.Log(i.Key + "  //  " + i.Value.NickName);
-            }
+            }*/
            
         }
         StartCoroutine(CreateTable());
@@ -86,11 +86,12 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     [PunRPC]
     public void InitMyCard(string json)
     {
-        Debug.Log(json);
-        /*foreach(var c in JsonConvert.DeserializeObject<List<Card1>>(json))
+        //Debug.Log(json);
+        listCard = JsonConvert.DeserializeObject<List<CardData>>(json);
+        foreach (var c in JsonConvert.DeserializeObject<List<Card1>>(json))
         {
             Debug.Log(c.rank + " " + c.suit);
-        }*/
+        }
     }
     IEnumerator CreateTable()
     {
