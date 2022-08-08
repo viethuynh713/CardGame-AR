@@ -27,7 +27,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
 
     private GameState state;
     public List<CardData> listCard = new List<CardData>();
-    public List<Card1> myCard = new List<Card1>();
+    public List<CardData> myCardList = new List<CardData>();
     private string[] suits = new string[] { "Club", "Diamond", "Spade", "Heart" };
     private string[] ranks = new string[] { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" };
 
@@ -40,8 +40,17 @@ public class GameManager1 : MonoBehaviourPunCallbacks
 
     private void Start()
     {
+
         turn = 0;
-        myCard.Clear();
+        if(PhotonNetwork.LocalPlayer.UserId == PhotonNetwork.CurrentRoom.Players[turn].UserId)
+        {
+            notifyTxt.text = "Your Turn ...";
+        }
+        else
+        {
+            notifyTxt.text = "Turn of " + PhotonNetwork.CurrentRoom.Players[turn].NickName;
+        }
+        myCardList.Clear();
         listCard.Clear();
         view = gameObject.GetComponent<PhotonView>();
         hits = new List<ARRaycastHit>();
@@ -54,19 +63,42 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         }
         StartCoroutine(CreateTable());
 
+        TestFunc();
+    }
+
+    private void TestFunc()
+    {
+        Vector3 screemPos = ARcamera.transform.position - ARcamera.transform.forward*3 ;
+        Debug.Log(screemPos);
+        var obj = PhotonNetwork.Instantiate("Red_PlayingCards_Club3", screemPos, Quaternion.identity);
+        obj.transform.SetParent(table.transform);
+        obj.transform.position = screemPos;
+        obj.transform.rotation = new Quaternion(0.0f, ARcamera.transform.rotation.y, 0.0f, ARcamera.transform.rotation.w);
 
     }
 
     [PunRPC]
-    public void InitMyCard(string json,string id)
+    public void InitMyCardList(string json,string id)
     {
         if(id == PhotonNetwork.LocalPlayer.UserId)
         {
-            Debug.Log(id);
-            Debug.Log(json);
+            myCardList = JsonConvert.DeserializeObject<List<CardData>>(json);
+            InstantiateMyCard();
         }
 
     }
+
+    private void InstantiateMyCard()
+    {
+        foreach(var card in myCardList)
+        {
+            Vector2 screemPos = ARcamera.transform.position - new Vector3(0, 0.5f, -0.8f);
+            var obj = PhotonNetwork.Instantiate("Red_PlayingCards_" + card.suit + card.rank, screemPos, Quaternion.identity);
+            obj.transform.LookAt(ARcamera.transform);
+
+        }
+    }
+
     IEnumerator CreateTable()
     {
         while(GameObject.FindGameObjectWithTag("Table") == null)
@@ -138,7 +170,18 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     public void ChangeTurn()
     {
         Debug.Log("Change turn");
-        
+        turn ++;
+        if (turn > PhotonNetwork.CurrentRoom.PlayerCount) turn = 0;
+        if (PhotonNetwork.LocalPlayer.UserId == PhotonNetwork.CurrentRoom.Players[turn].UserId)
+        {
+            notifyTxt.text = "Your Turn ...";
+        }
+        else
+        {
+            notifyTxt.text = "Turn of " + PhotonNetwork.CurrentRoom.Players[turn].NickName;
+        }
+
+
     }
     
 
@@ -146,7 +189,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     {
         if(PhotonNetwork.CurrentRoom.PlayerCount == 2)
         {
-            view.RPC("ChangeState", RpcTarget.All, GameState.Ready);
+            view.RPC(nameof(ChangeState), RpcTarget.All, GameState.Ready);
         }
         notifyTxt.text = "Player " + newPlayer.NickName + " joined";
         countPlayer.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString() + "/" + PhotonNetwork.CurrentRoom.MaxPlayers.ToString();
@@ -158,7 +201,8 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     }
     public void StartBtn()
     {
-        if(PhotonNetwork.IsMasterClient && state == GameState.Ready)
+        view.RPC(nameof(ChangeTurn), RpcTarget.All);
+        /*if(PhotonNetwork.IsMasterClient && state == GameState.Ready)
         {
             view.RPC(nameof(ChangeState), RpcTarget.All, GameState.Playing);
             foreach (var s in suits)
@@ -179,7 +223,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
             {
                 var lstMyCard = listCard.GetRange(i * 12, 12);
 
-                view.RPC(nameof(InitMyCard), RpcTarget.All, JsonConvert.SerializeObject(lstMyCard),PhotonNetwork.CurrentRoom.Players[i].UserId);
+                view.RPC(nameof(InitMyCardList), RpcTarget.All, JsonConvert.SerializeObject(lstMyCard),PhotonNetwork.CurrentRoom.Players[i + 1].UserId);
 
             }    
             var json = JsonConvert.SerializeObject(listCard);
@@ -188,14 +232,14 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         else
         {
             notifyTxt.text = "Đừng vội =))";
-        }
+        }*/
     }
     
     [PunRPC]
     public void ChangeState(GameState st)
     {
         state = st;
-        Debug.Log("Change state");
+        notifyTxt.text = "Change state to " + st.ToString();
     }
     [PunRPC]
     public void EndGame()
