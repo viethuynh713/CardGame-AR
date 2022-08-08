@@ -76,7 +76,7 @@ public class ChangeColor : MonoBehaviour
                 }
             }
         }
-
+/*
         if(Input.GetMouseButton(0))
         {
             touchPOS =Input.mousePosition;
@@ -118,7 +118,7 @@ public class ChangeColor : MonoBehaviour
             }
         }
         
-        
+        */
 
 
 
