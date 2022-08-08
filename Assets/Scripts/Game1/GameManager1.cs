@@ -42,7 +42,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     {
 
         turn = 0;
-        if(PhotonNetwork.LocalPlayer.UserId == PhotonNetwork.CurrentRoom.Players[turn].UserId)
+        if(PhotonNetwork.AuthValues.UserId == PhotonNetwork.CurrentRoom.Players[turn +1].UserId)
         {
             notifyTxt.text = "Your Turn ...";
         }
@@ -63,7 +63,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         }
         StartCoroutine(CreateTable());
 
-        TestFunc();
+        //TestFunc();
     }
 
     private void TestFunc()
@@ -80,10 +80,11 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     [PunRPC]
     public void InitMyCardList(string json,string id)
     {
-        if(id == PhotonNetwork.LocalPlayer.UserId)
+        if(id == PhotonNetwork.AuthValues.UserId)
         {
             myCardList = JsonConvert.DeserializeObject<List<CardData>>(json);
-            InstantiateMyCard();
+            Debug.Log(json);
+            //InstantiateMyCard();
         }
 
     }
@@ -171,8 +172,8 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     {
         Debug.Log("Change turn");
         turn ++;
-        if (turn > PhotonNetwork.CurrentRoom.PlayerCount) turn = 0;
-        if (PhotonNetwork.LocalPlayer.UserId == PhotonNetwork.CurrentRoom.Players[turn].UserId)
+        if (turn > PhotonNetwork.CurrentRoom.PlayerCount) turn = 1;
+        if (PhotonNetwork.AuthValues.UserId == PhotonNetwork.CurrentRoom.Players[turn].UserId)
         {
             notifyTxt.text = "Your Turn ...";
         }
