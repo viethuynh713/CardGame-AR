@@ -6,8 +6,7 @@ using Photon.Pun;
 using UnityEngine.UI;
 using Photon.Realtime;
 using System.Collections;
-using DG.Tweening;
-
+using Newtonsoft.Json;
 public class GameManager1 : MonoBehaviourPunCallbacks
 {
     public static GameManager1 instance;
@@ -15,7 +14,6 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     [SerializeField] private Text notifyTxt;
     [SerializeField] private Text roomNameTxt;
     [SerializeField] private Text countPlayer;
-    [SerializeField] private RawImage targetCardImg;
 
     [Header("Prefabs")]
     public GameObject table;
@@ -28,13 +26,12 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     private PhotonView view;
 
     private GameState state;
-    public List<Card> listCard;
-    private Card target;
+    public List<CardData> listCard = new List<CardData>();
+    public List<Card1> myCard = new List<Card1>();
     private string[] suits = new string[] { "Club", "Diamond", "Spade", "Heart" };
     private string[] ranks = new string[] { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" };
 
-    private bool isMasterTurn;
-
+    public int turn;
     private void Awake()
     {
         instance = this;
@@ -43,19 +40,57 @@ public class GameManager1 : MonoBehaviourPunCallbacks
 
     private void Start()
     {
-        isMasterTurn = true;
+        turn = 0;
+        myCard.Clear();
+        listCard.Clear();
         view = gameObject.GetComponent<PhotonView>();
         hits = new List<ARRaycastHit>();
         state = GameState.Waiting;
-        //view.RPC("ChangeState", RpcTarget.All, GameState.Waiting);
         roomNameTxt.text = PhotonNetwork.CurrentRoom.Name;
         countPlayer.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString() + "/" + PhotonNetwork.CurrentRoom.MaxPlayers.ToString();
         if (PhotonNetwork.IsMasterClient)
         {
             PhotonNetwork.Instantiate("Table", Vector3.zero, Quaternion.identity);
+            foreach(var s in suits)
+            {
+                foreach (var r in ranks)
+                {
+                    var card = new CardData();
+                    card.rank = r;
+                    card.suit = s;
+                    listCard.Add(card);
+                }
+            }
+            listCard.Sort(delegate (CardData x, CardData y)
+            {
+                return Random.RandomRange(-1,2);
+            });
+            listCard.ForEach((x) =>
+            {
+                Debug.Log(x.rank + " "+ x.suit);
+            });
+            var json = JsonConvert.SerializeObject(listCard);
+            Debug.Log(json);
+            //view.RPC(nameof(InitMyCard), RpcTarget.All,json);
+            foreach (var i in PhotonNetwork.CurrentRoom.Players)
+            {
+                Debug.Log(i.Key + "  //  " + i.Value.NickName);
+            }
+           
         }
         StartCoroutine(CreateTable());
 
+
+    }
+
+    [PunRPC]
+    public void InitMyCard(string json)
+    {
+        Debug.Log(json);
+        /*foreach(var c in JsonConvert.DeserializeObject<List<Card1>>(json))
+        {
+            Debug.Log(c.rank + " " + c.suit);
+        }*/
     }
     IEnumerator CreateTable()
     {
@@ -65,7 +100,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         }
         table = GameObject.FindGameObjectWithTag("Table");
     }
-    private void Update()
+    /*private void Update()
     {
 
         Debug.Log(state.ToString());
@@ -123,30 +158,14 @@ public class GameManager1 : MonoBehaviourPunCallbacks
                 }
             }
         }
-    }
+    }*/
     [PunRPC]
     public void ChangeTurn()
     {
         Debug.Log("Change turn");
-        isMasterTurn = !isMasterTurn;
+        
     }
-    IEnumerator CompareWithTargetCard(Card selected)
-    {
-        yield return new WaitForSeconds(1.5f);
-        if(target.suit == selected.suit && target.rank == selected.rank)
-        {
-            // state = GameState.End;
-            view.RPC("ChangeState", RpcTarget.All, GameState.End);
-            //Debug.Log("End Game");
-            notifyTxt.text = "You win";
-            view.RPC("EndGame", RpcTarget.Others);
-        }
-        else
-        {
-            selected.view.RPC("FlipDown", RpcTarget.All);
-            view.RPC("ChangeTurn", RpcTarget.All);
-        }
-    }
+    
 
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
@@ -175,7 +194,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
             var idx = UnityEngine.Random.RandomRange(0, listCard.Count);
             view.RPC("SetTargetCard", RpcTarget.All, listCard[idx].suit, listCard[idx].rank);
             //target = listCard[UnityEngine.Random.RandomRange(0, listCard.Count)];
-            Debug.Log(target.rank + target.suit);
+            
         }
         else
         {
@@ -185,37 +204,16 @@ public class GameManager1 : MonoBehaviourPunCallbacks
 
     private void RandomListCard()
     {
-        while(listCard.Count != 32)
+        /*while(listCard.Count != 32)
         {
             string s = suits[UnityEngine.Random.RandomRange(0, suits.Length)];
             string r = ranks[UnityEngine.Random.RandomRange(0, ranks.Length)];
             var card = new Card(s, r);
             if (listCard.Contains(card)) continue;
             listCard.Add(card);
-        }
+        }*/
     }
-    [PunRPC]
-    public void SetTargetCard(string suit,string rank)
-    {
-        //-90/-100/0
-        targetCardImg.GetComponent<RectTransform>().DORotate(new Vector3(0, -180, 0), 0);
-        //targetCardImg.GetComponent<RectTransform>().DOAnchorPos(new Vector2(-400, -400), 0);
-        Sequence sq = DOTween.Sequence();
-        sq.Append(targetCardImg.GetComponent<RectTransform>().DOAnchorPos(new Vector2(-400, -400), 1.5f));
-        sq.Insert(0,targetCardImg.GetComponent<RectTransform>().DOScale(new Vector3(3,3,3), 1.5f));
-        sq.Append(targetCardImg.GetComponent<RectTransform>().DORotate(new Vector3(0, -90, 0), 0.2f));
-        sq.AppendCallback(() =>
-        {
-            targetCardImg.texture = Resources.Load<Texture>("Image/" + suit + rank);
-        });
-        sq.Append(targetCardImg.GetComponent<RectTransform>().DORotate(new Vector3(0, 0, 0), 0.2f));
-        //sq.PrependInterval(0.5f);
-        sq.Append(targetCardImg.GetComponent<RectTransform>().DOAnchorPos(new Vector2(-90, -100), 1));
-        sq.Insert(2f, targetCardImg.GetComponent<RectTransform>().DOScale(new Vector3(1, 1, 1), 1));
-
-
-        target = new Card(suit, rank);
-    }
+    
     [PunRPC]
     public void ChangeState(GameState st)
     {

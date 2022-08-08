@@ -760,11 +760,11 @@ MonoBehaviour:
   notifyTxt: {fileID: 555777185}
   roomNameTxt: {fileID: 1987779049}
   countPlayer: {fileID: 1848879380}
-  targetCardImg: {fileID: 0}
-  table: {fileID: 0}
-  arRaycatManager: {fileID: 0}
-  ARcamera: {fileID: 0}
+  table: {fileID: 7716129328419237593, guid: 8e5a9ad116c83b148bf0b0ef1da5f8c3, type: 3}
+  arRaycatManager: {fileID: 952579235}
+  ARcamera: {fileID: 658788790}
   listCard: []
+  turn: 0
 --- !u!1 &1407819041
 GameObject:
   m_ObjectHideFlags: 0
