@@ -21,7 +21,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     }
     public override void OnConnectedToMaster()
     {
-        PhotonNetwork.JoinLobby();
+        TypedLobby lt = new TypedLobby(SupperGameManager.instance.KindOfGame, LobbyType.Default);
+        PhotonNetwork.JoinLobby(lt);
     }
     public override void OnJoinedLobby()
     {
@@ -35,9 +36,10 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public override void OnRoomListUpdate(List<RoomInfo> roomList)
     {
        Debug.Log("Room List Updated");
-        //Debug.Log(roomList.Count);
+        Debug.Log(roomList.Count);
         foreach (var room in roomList)
         {
+            
             if(!listRoom.ContainsKey(room.Name))
             {
                 GameObject roomInfoUI = Instantiate(roomInfoUIPrefab, roomInfoUIParent);
@@ -64,7 +66,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public void CreateRoom(InputField name)
     {
         int maxPlayer;
-        switch(SupperGameManager.instance.KindOfGame)
+        switch (SupperGameManager.instance.KindOfGame)
         {
             case "Game0":
                 maxPlayer = 2;
@@ -80,11 +82,12 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         {
             MaxPlayers = (byte)maxPlayer,
             PublishUserId = true,
-            EmptyRoomTtl = 100
+            EmptyRoomTtl = 100,
+
 
         };
         var typeLB = new TypedLobby(SupperGameManager.instance.KindOfGame, LobbyType.Default);
-        PhotonNetwork.CreateRoom(name.text,options, typeLB);
+        PhotonNetwork.CreateRoom(name.text,options,typeLB);
     }
     public override void OnJoinedRoom()
     {
@@ -114,8 +117,29 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     }
     public override void OnJoinRandomFailed(short returnCode, string message)
     {
-        CreateRoom(null);
-        
+        int maxPlayer;
+        switch (SupperGameManager.instance.KindOfGame)
+        {
+            case "Game0":
+                maxPlayer = 2;
+                break;
+            case "Game1":
+                maxPlayer = 4;
+                break;
+            default:
+                maxPlayer = 0;
+                break;
+        }
+        RoomOptions options = new RoomOptions()
+        {
+            MaxPlayers = (byte)maxPlayer,
+            PublishUserId = true,
+            EmptyRoomTtl = 100
+
+        };
+        var typeLB = new TypedLobby(SupperGameManager.instance.KindOfGame, LobbyType.Default);
+        PhotonNetwork.CreateRoom(null, options,typeLB);
+
     }
 
 

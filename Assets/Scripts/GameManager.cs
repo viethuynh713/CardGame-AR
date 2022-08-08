@@ -162,7 +162,7 @@ public class GameManager : MonoBehaviourPunCallbacks
             state = GameState.Ready;
             //view.RPC("ChangeState", RpcTarget.All, GameState.Ready);
         }
-        notifyTxt.text = "Player " + newPlayer.UserId.Substring(0,3) + "joined";
+        notifyTxt.text = "Player " + newPlayer.NickName + " joined";
         countPlayer.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString() + "/" + PhotonNetwork.CurrentRoom.MaxPlayers.ToString();
     }
     public override void OnPlayerLeftRoom(Player otherPlayer)
