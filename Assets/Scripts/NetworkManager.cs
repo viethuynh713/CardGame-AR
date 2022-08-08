@@ -34,7 +34,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     }
     public override void OnRoomListUpdate(List<RoomInfo> roomList)
     {
-       // Debug.Log("Room List Updated");
+       Debug.Log("Room List Updated");
         //Debug.Log(roomList.Count);
         foreach (var room in roomList)
         {
@@ -79,9 +79,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         RoomOptions options = new RoomOptions()
         {
             MaxPlayers = (byte)maxPlayer,
-            IsVisible = true,
-            PublishUserId = true
-
+            PublishUserId = true,
+            EmptyRoomTtl = 100
 
         };
         var typeLB = new TypedLobby(SupperGameManager.instance.KindOfGame, LobbyType.Default);
@@ -115,23 +114,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     }
     public override void OnJoinRandomFailed(short returnCode, string message)
     {
-        int maxPlayer;
-        switch (SupperGameManager.instance.KindOfGame)
-        {
-            case "Game0":
-                maxPlayer = 2;
-                break;
-            case "Game1":
-                maxPlayer = 4;
-                break;
-            default:
-                maxPlayer = 0;
-                break;
-        }
-
-        var typeLB = new TypedLobby(SupperGameManager.instance.KindOfGame, LobbyType.Default);
-        PhotonNetwork.CreateRoom(null, new RoomOptions() { MaxPlayers = (byte)maxPlayer,
-            IsVisible = true, PublishUserId = true }, typeLB);
+        CreateRoom(null);
         
     }
 
