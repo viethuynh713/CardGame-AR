@@ -50,33 +50,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         countPlayer.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString() + "/" + PhotonNetwork.CurrentRoom.MaxPlayers.ToString();
         if (PhotonNetwork.IsMasterClient)
         {
-            PhotonNetwork.Instantiate("Table", Vector3.zero, Quaternion.identity);
-            foreach(var s in suits)
-            {
-                foreach (var r in ranks)
-                {
-                    var card = new CardData();
-                    card.rank = r;
-                    card.suit = s;
-                    listCard.Add(card);
-                }
-            }
-            listCard.Sort(delegate (CardData x, CardData y)
-            {
-                return Random.RandomRange(-1,2);
-            });
-            listCard.ForEach((x) =>
-            {
-                Debug.Log(x.rank + " "+ x.suit);
-            });
-            var json = JsonConvert.SerializeObject(listCard);
-            //Debug.Log(json);
-            view.RPC(nameof(InitMyCard), RpcTarget.Others,json);
-            /*foreach (var i in PhotonNetwork.CurrentRoom.Players)
-            {
-                Debug.Log(i.Key + "  //  " + i.Value.NickName);
-            }*/
-           
+            PhotonNetwork.Instantiate("Table", Vector3.zero, Quaternion.identity);           
         }
         StartCoroutine(CreateTable());
 
@@ -172,47 +146,50 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     {
         if(PhotonNetwork.CurrentRoom.PlayerCount == 2)
         {
-            state = GameState.Ready;
-            //view.RPC("ChangeState", RpcTarget.All, GameState.Ready);
+            view.RPC("ChangeState", RpcTarget.All, GameState.Ready);
         }
-        notifyTxt.text = "Player " + newPlayer.UserId.Substring(0,3) + "joined";
+        notifyTxt.text = "Player " + newPlayer.NickName + " joined";
         countPlayer.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString() + "/" + PhotonNetwork.CurrentRoom.MaxPlayers.ToString();
     }
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
-        notifyTxt.text = "Player " + otherPlayer.UserId.Substring(0, 3) + "leave";
+        notifyTxt.text = "Player " + otherPlayer.NickName + " leave";
         countPlayer.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString() + "/" + PhotonNetwork.CurrentRoom.MaxPlayers.ToString();
     }
     public void StartBtn()
     {
         if(PhotonNetwork.IsMasterClient && state == GameState.Ready)
         {
-            //state = GameState.Playing;
             view.RPC("ChangeState", RpcTarget.All, GameState.Playing);
-
-            RandomListCard();
-            table.GetComponent<InitBoard>().Init();
-            var idx = UnityEngine.Random.RandomRange(0, listCard.Count);
-            view.RPC("SetTargetCard", RpcTarget.All, listCard[idx].suit, listCard[idx].rank);
-            //target = listCard[UnityEngine.Random.RandomRange(0, listCard.Count)];
-            
+            foreach (var s in suits)
+            {
+                foreach (var r in ranks)
+                {
+                    var card = new CardData();
+                    card.rank = r;
+                    card.suit = s;
+                    listCard.Add(card);
+                }
+            }
+            listCard.Sort(delegate (CardData x, CardData y)
+            {
+                return Random.RandomRange(-1, 2);
+            });
+/*            listCard.ForEach((x) =>
+            {
+                Debug.Log(x.rank + " " + x.suit);
+            });*/
+            var json = JsonConvert.SerializeObject(listCard);
+            view.RPC(nameof(InitMyCard), RpcTarget.Others, json);
+            /*foreach (var i in PhotonNetwork.CurrentRoom.Players)
+            {
+                Debug.Log(i.Key + "  //  " + i.Value.NickName);
+            }*/
         }
         else
         {
             notifyTxt.text = "Đừng vội =))";
         }
-    }
-
-    private void RandomListCard()
-    {
-        /*while(listCard.Count != 32)
-        {
-            string s = suits[UnityEngine.Random.RandomRange(0, suits.Length)];
-            string r = ranks[UnityEngine.Random.RandomRange(0, ranks.Length)];
-            var card = new Card(s, r);
-            if (listCard.Contains(card)) continue;
-            listCard.Add(card);
-        }*/
     }
     
     [PunRPC]
