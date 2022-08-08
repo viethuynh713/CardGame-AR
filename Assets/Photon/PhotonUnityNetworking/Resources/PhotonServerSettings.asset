@@ -52,6 +52,7 @@ MonoBehaviour:
   - CreateTable
   - FlipDown
   - FlipUp
+  - InitMyCard
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

@@ -58,14 +58,14 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     }
 
     [PunRPC]
-    public void InitMyCard(string json)
+    public void InitMyCard(string json,string id)
     {
-        //Debug.Log(json);
-        listCard = JsonConvert.DeserializeObject<List<CardData>>(json);
-        foreach (var c in JsonConvert.DeserializeObject<List<Card1>>(json))
+        if(id == PhotonNetwork.LocalPlayer.UserId)
         {
-            Debug.Log(c.rank + " " + c.suit);
+            Debug.Log(id);
+            Debug.Log(json);
         }
+
     }
     IEnumerator CreateTable()
     {
@@ -160,7 +160,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     {
         if(PhotonNetwork.IsMasterClient && state == GameState.Ready)
         {
-            view.RPC("ChangeState", RpcTarget.All, GameState.Playing);
+            view.RPC(nameof(ChangeState), RpcTarget.All, GameState.Playing);
             foreach (var s in suits)
             {
                 foreach (var r in ranks)
@@ -175,16 +175,15 @@ public class GameManager1 : MonoBehaviourPunCallbacks
             {
                 return Random.RandomRange(-1, 2);
             });
-/*            listCard.ForEach((x) =>
+            for(int i = 0; i< PhotonNetwork.CurrentRoom.PlayerCount; i++)
             {
-                Debug.Log(x.rank + " " + x.suit);
-            });*/
+                var lstMyCard = listCard.GetRange(i * 12, 12);
+
+                view.RPC(nameof(InitMyCard), RpcTarget.All, JsonConvert.SerializeObject(lstMyCard),PhotonNetwork.CurrentRoom.Players[i].UserId);
+
+            }    
             var json = JsonConvert.SerializeObject(listCard);
-            view.RPC(nameof(InitMyCard), RpcTarget.Others, json);
-            /*foreach (var i in PhotonNetwork.CurrentRoom.Players)
-            {
-                Debug.Log(i.Key + "  //  " + i.Value.NickName);
-            }*/
+
         }
         else
         {

@@ -763,7 +763,6 @@ MonoBehaviour:
   table: {fileID: 7716129328419237593, guid: 8e5a9ad116c83b148bf0b0ef1da5f8c3, type: 3}
   arRaycatManager: {fileID: 952579235}
   ARcamera: {fileID: 658788790}
-  listCard: []
   turn: 0
 --- !u!1 &1407819041
 GameObject:
@@ -943,8 +942,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
+      - m_Target: {fileID: 1069999705}
+        m_TargetAssemblyTypeName: GameManager1, Assembly-CSharp
         m_MethodName: StartBtn
         m_Mode: 1
         m_Arguments:
