@@ -152,8 +152,8 @@ public class GameManager : MonoBehaviourPunCallbacks
         else
         {
             //selected.FlipDown();
-            //selected.view.RPC("FlipDown", RpcTarget.Others);
-            view.RPC("ChangeTurn", RpcTarget.MasterClient);
+            selected.view.RPC("FlipDown", RpcTarget.MasterClient);
+            view.RPC("ChangeTurn", RpcTarget.All);
         }
     }
 
