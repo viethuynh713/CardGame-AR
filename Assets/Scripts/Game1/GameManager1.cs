@@ -43,20 +43,9 @@ public class GameManager1 : MonoBehaviourPunCallbacks
 
     private void Start()
     {
-
-        turn = 0;
-        if(PhotonNetwork.AuthValues.UserId == playerID[turn])
-        {
-            notifyTxt.text = "Your Turn ...";
-            isMyTurn = true;
-        }
-        else
-        {
-            notifyTxt.text = "Turn of " + PhotonNetwork.CurrentRoom.Players[turn].NickName;
-            isMyTurn = false;
-        }
         myCardList.Clear();
         listCard.Clear();
+        turn = 0;
         view = gameObject.GetComponent<PhotonView>();
         hits = new List<ARRaycastHit>();
         state = GameState.Waiting;
@@ -180,6 +169,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         if (turn > playerID.Count) turn = 0;
         if (PhotonNetwork.AuthValues.UserId == playerID[turn])
         {
+
             notifyTxt.text = "Your Turn ...";
             isMyTurn = true;
         }
@@ -196,7 +186,17 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
         playerID.Add(newPlayer.UserId);
-        if(PhotonNetwork.CurrentRoom.PlayerCount == 2)
+        if (PhotonNetwork.AuthValues.UserId == playerID[turn])
+        {
+            notifyTxt.text = "Your Turn ...";
+            isMyTurn = true;
+        }
+        else
+        {
+            notifyTxt.text = "Turn of " + PhotonNetwork.CurrentRoom.Players[turn].NickName;
+            isMyTurn = false;
+        }
+        if (PhotonNetwork.CurrentRoom.PlayerCount == 2)
         {
             view.RPC(nameof(ChangeState), RpcTarget.All, GameState.Ready);
         }
