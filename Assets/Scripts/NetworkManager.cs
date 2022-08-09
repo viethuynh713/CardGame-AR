@@ -73,6 +73,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks
                 break;
             case "Game1":
                 maxPlayer = 4;
+/*                var hashtableProber = new ExitGames.Client.Photon.Hashtable();
+                hashtableProber["MyCards"] = 0;
+                PhotonNetwork.SetPlayerCustomProperties(hashtableProber);*/
                 break;
             default:
                 maxPlayer = 0;

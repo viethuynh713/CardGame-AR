@@ -96,7 +96,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         {
             myCardList = JsonConvert.DeserializeObject<List<CardData>>(json);
             Debug.Log(json);
-            //InstantiateMyCard();
+            InstantiateMyCard();
         }
 
     }
@@ -107,7 +107,9 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         {
             Vector2 screemPos = ARcamera.transform.position - new Vector3(0, 0.5f, -0.8f);
             var obj = PhotonNetwork.Instantiate("Red_PlayingCards_" + card.suit + card.rank, screemPos, Quaternion.identity);
-            obj.transform.LookAt(ARcamera.transform);
+            obj.GetComponent<Card>().rank = card.rank;
+            obj.GetComponent<Card>().suit = card.suit;
+            //obj.transform.LookAt(ARcamera.transform);
 
         }
     }
@@ -215,22 +217,28 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         }
         notifyTxt.text = "Player " + newPlayer.NickName + " joined";
         countPlayer.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString() + "/" + PhotonNetwork.CurrentRoom.MaxPlayers.ToString();
+        
     }
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
         playerID.Remove(otherPlayer.UserId);
         playerID.Sort();
-        /*if(state == GameState.Ready)
+        if (state == GameState.Ready)
         {
-            
-        }*/
+            state = GameState.Waiting;
+        }
+        else
+        {
+            state = GameState.Ready;
+        }
         notifyTxt.text = "Player " + otherPlayer.NickName + " leave";
         countPlayer.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString() + "/" + PhotonNetwork.CurrentRoom.MaxPlayers.ToString();
     }
     public void StartBtn()
     {
-        if (GameState.Playing == state)
+        if (GameState.Playing == state && isMyTurn)
         {
+            TransformCardSelected();
             view.RPC(nameof(ChangeTurn), RpcTarget.All);
         }
         else if (PhotonNetwork.IsMasterClient && state == GameState.Ready)
@@ -252,11 +260,13 @@ public class GameManager1 : MonoBehaviourPunCallbacks
             {
                 return Random.RandomRange(-1, 2);
             });
+            var player = PhotonNetwork.CurrentRoom.Players[1];
             for (int i = 0; i < PhotonNetwork.CurrentRoom.PlayerCount; i++)
             {
-                var lstMyCard = listCard.GetRange(i * 12, 12);
-
-                view.RPC(nameof(InitMyCardList), RpcTarget.All, JsonConvert.SerializeObject(lstMyCard), PhotonNetwork.CurrentRoom.Players[i + 1].UserId);
+                var lstMyCard = listCard.GetRange(i * 12, 13);
+                //PhotonNetwork.CurrentRoom.Players[i + 1].get
+                view.RPC(nameof(InitMyCardList), RpcTarget.All, JsonConvert.SerializeObject(lstMyCard), player.UserId);
+                player = player.GetNext();
 
             }
             //var json = JsonConvert.SerializeObject(listCard);
@@ -268,7 +278,14 @@ public class GameManager1 : MonoBehaviourPunCallbacks
             notifyTxt.text = "Đừng vội =))";
         }
     }
-    
+    /// <summary>
+    /// Move card to target position
+    /// </summary>
+    private void TransformCardSelected()
+    {
+        
+    }
+
     [PunRPC]
     public void ChangeState(GameState st)
     {
