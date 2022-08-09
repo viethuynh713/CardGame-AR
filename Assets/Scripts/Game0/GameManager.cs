@@ -120,7 +120,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                             if (cardSelected != null)
                             {
                                 Debug.Log("Touch");
-                                cardSelected.view.RPC("FlipUp", RpcTarget.All);
+                                cardSelected.FlipUp();
                                 //cardSelected.Flip();
                                 //Debug.Log(target.rank + target.suit + "--" + cardSelected.rank + cardSelected.suit);
                                 StartCoroutine(CompareWithTargetCard(cardSelected));
@@ -150,7 +150,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
         else
         {
-            selected.view.RPC("FlipDown", RpcTarget.All);
+            selected.FlipDown();
             view.RPC("ChangeTurn", RpcTarget.All);
         }
     }
