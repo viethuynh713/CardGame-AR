@@ -41,8 +41,10 @@ public class Card : MonoBehaviour
         sq.Append(transform.DOLocalMoveY(0.2f, 0.2f));
     }
     [PunRPC]
-    public void SetParentGame0()
+    public void SetInitValue(string suit, string rank)
     {
+        this.suit = suit;
+        this.rank = rank;
         Debug.Log("SetParent");
         transform.localPosition = new Vector3(0,0.2f,0);
         transform.localEulerAngles = new Vector3(0, 0, 180);

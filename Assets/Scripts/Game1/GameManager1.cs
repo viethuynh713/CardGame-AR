@@ -69,7 +69,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         }
         playerID.Sort();
         //Debug.Log(PhotonNetwork.LocalPlayer.NickName + "//" + PhotonNetwork.LocalPlayer.UserId);
-        //Debug.Log(PhotonNetwork.AuthValues.UserId);
+        Debug.Log(PhotonNetwork.AuthValues.UserId);
         //TestFunc();
     }
 
