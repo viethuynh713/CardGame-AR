@@ -193,6 +193,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         {
             //notifyTxt.text = "Turn of " + PhotonNetwork.CurrentRoom.Players[turn].NickName;
             isMyTurn = false;
+            notifyTxt.text = "...";
         }
 
 
@@ -255,6 +256,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
             else
             {
                 //notifyTxt.text = "Turn of " + PhotonNetwork.CurrentRoom.);
+                notifyTxt.text = "...";
                 isMyTurn = false;
             }
 
