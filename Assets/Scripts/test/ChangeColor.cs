@@ -130,6 +130,7 @@ public class ChangeColor : MonoBehaviour
         {
             notifyTxt.text = "Spawning: " + placedObjectPrefab.name + " at " + hitAR[0].pose.position;
             GameObject obj = PhotonNetwork.Instantiate(placedObjectPrefab.name, hitAR[0].pose.position, Quaternion.identity);
+            //obj.transform.SetParent(Camera.main.transform);
 
         }
     }

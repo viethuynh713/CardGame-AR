@@ -14,7 +14,6 @@ GameObject:
   - component: {fileID: 3963609604638629014}
   - component: {fileID: 6375253480820448410}
   - component: {fileID: 6797470264124779264}
-  - component: {fileID: -5925656766900365941}
   - component: {fileID: -6002390747350854635}
   m_Layer: 0
   m_Name: Cube
@@ -128,7 +127,6 @@ MonoBehaviour:
   OwnershipTransfer: 0
   observableSearch: 2
   ObservedComponents:
-  - {fileID: -5925656766900365941}
   - {fileID: -6002390747350854635}
   sceneViewId: 0
   InstantiationId: 0
@@ -145,7 +143,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed2ecd340afa95e4dab34cb4ec383592, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &-5925656766900365941
+--- !u!114 &-6002390747350854635
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -154,29 +152,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 4802640274101643965}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 627855c7f81362d41938ffe0b1475957, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_SynchronizePosition: 1
-  m_SynchronizeRotation: 0
-  m_SynchronizeScale: 0
-  m_UseLocal: 1
---- !u!114 &-6002390747350854635
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4802640274101643965}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8efc6b1d64977384eb3405357896c656, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_PositionModel:
     SynchronizeEnabled: 1
     TeleportEnabled: 1
-    TeleportIfDistanceGreaterThan: 1
+    TeleportIfDistanceGreaterThan: 0.1
     InterpolateOption: 2
     InterpolateMoveTowardsSpeed: 1
     InterpolateLerpSpeed: 1
@@ -185,7 +167,7 @@ MonoBehaviour:
     ExtrapolateIncludingRoundTripTime: 1
     ExtrapolateNumberOfStoredPositions: 1
   m_RotationModel:
-    SynchronizeEnabled: 0
+    SynchronizeEnabled: 1
     InterpolateOption: 1
     InterpolateRotateTowardsSpeed: 180
     InterpolateLerpSpeed: 5

@@ -8,12 +8,12 @@ public class Card : MonoBehaviour
 {
     public string suit;
     public string rank;
+    public bool isSelected;
     public PhotonView view;
     private void Awake()
     {
+        isSelected = false;
         view = gameObject.GetComponent<PhotonView>();
-        transform.localPosition = new Vector3(0,0.2f,0);
-        transform.localEulerAngles = new Vector3(0, 0, 180);
     }
     public Card(string suit,string rank)
     {
@@ -41,9 +41,11 @@ public class Card : MonoBehaviour
         sq.Append(transform.DOLocalMoveY(0.2f, 0.2f));
     }
     [PunRPC]
-    public void SetParent()
+    public void SetParentGame0()
     {
         Debug.Log("SetParent");
+        transform.localPosition = new Vector3(0,0.2f,0);
+        transform.localEulerAngles = new Vector3(0, 0, 180);
         gameObject.transform.SetParent(GameManager.instance.table.transform);
     }
     
@@ -65,5 +67,18 @@ public class Card : MonoBehaviour
     public override string ToString()
     {
         return base.ToString();
+    }
+
+    [PunRPC]
+    public void SelectCards()
+    {
+        if(isSelected)
+        {
+            isSelected = false;
+        }
+        else
+        {
+            isSelected = true;
+        }
     }
 }

@@ -20,7 +20,7 @@ public class InitBoard : MonoBehaviour
                 
                 obj.GetComponent<Card>().suit = GameManager.instance.listCard[idx].suit;
                 obj.GetComponent<Card>().rank = GameManager.instance.listCard[idx].rank;
-                obj.GetComponent<Card>().view.RPC("SetParent", RpcTarget.All);
+                obj.GetComponent<Card>().view.RPC("SetParentGame0", RpcTarget.All);
 
                 //obj.transform.position = new Vector3(0, 0.85f, 0);
                 obj.GetComponent<Card>().MoveTo(new Vector3((float)((x - 1) * 0.2 + 0.1), 0.2f, (float)((z - 1) * 0.3 + 0.15)));
