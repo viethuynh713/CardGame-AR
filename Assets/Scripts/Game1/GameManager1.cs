@@ -32,9 +32,11 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     private string[] suits = new string[] { "Club", "Diamond", "Spade", "Heart" };
     private string[] ranks = new string[] { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" };
 
-    public int turn;
+    public Player currrentTurn;
     public bool isMyTurn;
-    private List<string> playerID;
+    private List<string> playerID = new List<string>();
+    private int turn;
+
     private void Awake()
     {
         instance = this;
@@ -43,9 +45,11 @@ public class GameManager1 : MonoBehaviourPunCallbacks
 
     private void Start()
     {
+        
         myCardList.Clear();
         listCard.Clear();
-        turn = 0;
+        //PhotonNetwork.NetworkingClient.EventReceived += NetworkingClient_EventReceived;
+        //PhotonNetwork.SetPlayerCustomProperties(new ExitGames.Client.Photon.Hashtable());
         view = gameObject.GetComponent<PhotonView>();
         hits = new List<ARRaycastHit>();
         state = GameState.Waiting;
@@ -56,9 +60,16 @@ public class GameManager1 : MonoBehaviourPunCallbacks
             PhotonNetwork.Instantiate("Table", Vector3.zero, Quaternion.identity);           
         }
         StartCoroutine(CreateTable());
-
+        Debug.Log(PhotonNetwork.LocalPlayer.NickName + "//" + PhotonNetwork.LocalPlayer.UserId);
+        Debug.Log(PhotonNetwork.AuthValues.UserId);
         //TestFunc();
     }
+
+  /*  private void NetworkingClient_EventReceived(ExitGames.Client.Photon.EventData obj)
+    {
+        throw new System.NotImplementedException();
+        PhotonNetwork.RaiseEvent(1, 0, RaiseEventOptions.Default, ExitGames.Client.Photon.SendOptions.SendUnreliable);
+    }*/
 
     private void TestFunc()
     {
@@ -74,6 +85,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     [PunRPC]
     public void InitMyCardList(string json,string id)
     {
+
         if(id == PhotonNetwork.AuthValues.UserId)
         {
             myCardList = JsonConvert.DeserializeObject<List<CardData>>(json);
@@ -193,7 +205,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         }
         else
         {
-            notifyTxt.text = "Turn of " + PhotonNetwork.CurrentRoom.Players[turn].NickName;
+            //notifyTxt.text = "Turn of " + PhotonNetwork.CurrentRoom.);
             isMyTurn = false;
         }
         if (PhotonNetwork.CurrentRoom.PlayerCount == 2)
@@ -211,7 +223,10 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     }
     public void StartBtn()
     {
-        view.RPC(nameof(ChangeTurn), RpcTarget.All);
+        if (GameState.Playing == state)
+        {
+            view.RPC(nameof(ChangeTurn), RpcTarget.All);
+        }
         if (PhotonNetwork.IsMasterClient && state == GameState.Ready)
         {
             view.RPC(nameof(ChangeState), RpcTarget.All, GameState.Playing);
