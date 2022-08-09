@@ -60,8 +60,12 @@ public class GameManager1 : MonoBehaviourPunCallbacks
             PhotonNetwork.Instantiate("Table", Vector3.zero, Quaternion.identity);           
         }
         StartCoroutine(CreateTable());
-        Debug.Log(PhotonNetwork.LocalPlayer.NickName + "//" + PhotonNetwork.LocalPlayer.UserId);
-        Debug.Log(PhotonNetwork.AuthValues.UserId);
+        foreach(var player in PhotonNetwork.CurrentRoom.Players)
+        {
+            UpdateListPlayerID(player.Value.UserId);
+        }
+        //Debug.Log(PhotonNetwork.LocalPlayer.NickName + "//" + PhotonNetwork.LocalPlayer.UserId);
+        //Debug.Log(PhotonNetwork.AuthValues.UserId);
         //TestFunc();
     }
 
@@ -187,7 +191,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         }
         else
         {
-            notifyTxt.text = "Turn of " + PhotonNetwork.CurrentRoom.Players[turn].NickName;
+            //notifyTxt.text = "Turn of " + PhotonNetwork.CurrentRoom.Players[turn].NickName;
             isMyTurn = false;
         }
 
@@ -198,16 +202,6 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
         playerID.Add(newPlayer.UserId);
-        if (PhotonNetwork.AuthValues.UserId == playerID[turn])
-        {
-            notifyTxt.text = "Your Turn ...";
-            isMyTurn = true;
-        }
-        else
-        {
-            //notifyTxt.text = "Turn of " + PhotonNetwork.CurrentRoom.);
-            isMyTurn = false;
-        }
         if (PhotonNetwork.CurrentRoom.PlayerCount == 2)
         {
             view.RPC(nameof(ChangeState), RpcTarget.All, GameState.Ready);
@@ -227,7 +221,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         {
             view.RPC(nameof(ChangeTurn), RpcTarget.All);
         }
-        if (PhotonNetwork.IsMasterClient && state == GameState.Ready)
+        else if (PhotonNetwork.IsMasterClient && state == GameState.Ready)
         {
             view.RPC(nameof(ChangeState), RpcTarget.All, GameState.Playing);
             foreach (var s in suits)
@@ -251,12 +245,23 @@ public class GameManager1 : MonoBehaviourPunCallbacks
                 view.RPC(nameof(InitMyCardList), RpcTarget.All, JsonConvert.SerializeObject(lstMyCard), PhotonNetwork.CurrentRoom.Players[i + 1].UserId);
 
             }
-            var json = JsonConvert.SerializeObject(listCard);
+            //var json = JsonConvert.SerializeObject(listCard);
+            turn = 0;
+            if (PhotonNetwork.AuthValues.UserId == playerID[turn])
+            {
+                notifyTxt.text = "Your Turn ...";
+                isMyTurn = true;
+            }
+            else
+            {
+                //notifyTxt.text = "Turn of " + PhotonNetwork.CurrentRoom.);
+                isMyTurn = false;
+            }
 
         }
         else
         {
-            //notifyTxt.text = "Đừng vội =))";
+            notifyTxt.text = "Đừng vội =))";
         }
     }
     
@@ -271,6 +276,21 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     {
         notifyTxt.text = "You lose !!";
     }
+    public void UpdateListPlayerID(string id,bool isAdd = true)
+    {
+        if(isAdd)
+        {
+            if (playerID.Contains(id))
+                return;
+            playerID.Add(id);
+        }
+        else
+        {
+            if (playerID.Contains(id))
+                playerID.Remove(id);
+        }
+    }
+
 
 
 }
