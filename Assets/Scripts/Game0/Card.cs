@@ -9,9 +9,11 @@ public class Card : MonoBehaviour
     public string suit;
     public string rank;
     public bool isSelected;
+    public bool isDisable;
     public PhotonView view;
     private void Awake()
     {
+        isDisable = false;
         isSelected = false;
         view = gameObject.GetComponent<PhotonView>();
     }
@@ -76,17 +78,15 @@ public class Card : MonoBehaviour
     {
         return base.ToString();
     }
-
-    [PunRPC]
-    public void SelectCards()
+    public void HandleSelect()
     {
         if(isSelected)
         {
-            isSelected = false;
+            transform.DOLocalMoveZ(transform.localPosition.z + 0.05f, 0.5f);
         }
         else
         {
-            isSelected = true;
+            transform.DOLocalMoveZ(transform.localPosition.z - 0.05f, 0.5f);
         }
     }
 }

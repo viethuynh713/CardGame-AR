@@ -7,6 +7,7 @@ using UnityEngine.UI;
 using Photon.Realtime;
 using System.Collections;
 using Newtonsoft.Json;
+using DG.Tweening;
 public class GameManager1 : MonoBehaviourPunCallbacks
 {
     public static GameManager1 instance;
@@ -37,6 +38,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     private List<string> playerID = new List<string>();
     private List<Card> listCardsSelected;
     private int turn;
+    private GameObject pointSpawn;
 
     private void Awake()
     {
@@ -46,6 +48,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
 
     private void Start()
     {
+        posY = 0;
         listCardsSelected = new List<Card>();
         myCardList.Clear();
         listCard.Clear();
@@ -114,18 +117,25 @@ public class GameManager1 : MonoBehaviourPunCallbacks
             
             if(wall != null && wall.tag == "Wall")
             {
-                var obj = PhotonNetwork.Instantiate("Red_PlayingCards_Club3", wall.transform.position, Quaternion.identity);
+                pointSpawn = PhotonNetwork.Instantiate("PointSpawnCard", wall.transform.position, wall.transform.rotation);
                 wall.enabled = false;
+                pointSpawn.transform.eulerAngles = new Vector3(pointSpawn.transform.eulerAngles.x -80, pointSpawn.transform.eulerAngles.y, pointSpawn.transform.eulerAngles.z);
             }
         }
-        /*foreach (var card in myCardList)
+        if(pointSpawn != null)
         {
-            //Vector2 screemPos = ARcamera.transform.position - new Vector3(0, 0.5f, -0.8f);
-            var obj = PhotonNetwork.Instantiate("Red_PlayingCards_" + card.suit + card.rank, screemPos, Quaternion.identity);
-            obj.GetComponent<Card>().rank = card.rank;
-            obj.GetComponent<Card>().suit = card.suit;
+            for(int i = 0; i<myCardList.Count;i++)
+            {
+                var obj = PhotonNetwork.Instantiate("Red_PlayingCards_" + myCardList[i].suit + myCardList[i].rank, pointSpawn.transform.position,pointSpawn.transform.rotation);
+                obj.transform.SetParent(pointSpawn.transform);
+                obj.GetComponent<Card>().rank = myCardList[i].rank;
+                obj.GetComponent<Card>().suit = myCardList[i].suit;
+                obj.transform.localPosition = new Vector3(-0.16f + 0.03f * i, i * 0.001f, 0);
+                
+            }
 
-        }*/
+
+        }
     }
 
     IEnumerator CreateTable()
@@ -163,17 +173,19 @@ public class GameManager1 : MonoBehaviourPunCallbacks
                         {
                             var cardSelected = hit.collider.GetComponent<Card>();
                             Debug.Log(cardSelected);
-                            if (cardSelected != null && cardSelected.view.IsMine)
+                            if (cardSelected != null && cardSelected.view.IsMine && !cardSelected.isDisable)
                             {
-                                cardSelected.view.RPC("SelectCards", RpcTarget.All);
-                                if (cardSelected.isSelected)
+                                if (!cardSelected.isSelected)
                                 {
                                     listCardsSelected.Add(cardSelected);
+                                    cardSelected.isSelected = true;
                                 }
                                 else
                                 {
                                     listCardsSelected.Remove(cardSelected);
+                                    cardSelected.isSelected = false;
                                 }
+                                cardSelected.HandleSelect();
                                 Debug.Log("Quantity card is selected: " + listCardsSelected.Count);
                             }
                         }
@@ -283,9 +295,19 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     /// <summary>
     /// Move card to target position
     /// </summary>
+    private float posY;
     private void TransformCardSelected()
     {
-        
+        var RandomPos = new Vector3(Random.RandomRange(-0.2f, 0.2f), posY, Random.RandomRange(-0.2f, 0.2f));
+        for(int i = 0; i< listCardsSelected.Count; i++)
+        {
+            var newPos = table.transform.position + new Vector3(0, i * 0.0005f, 0.03f * i) + RandomPos;
+            listCardsSelected[i].isDisable = true;
+            listCardsSelected[i].transform.DOMove(newPos, 2);
+            listCardsSelected[i].transform.DORotate(new Vector3(0, 90, 0), 2);
+
+        }
+        posY += 0.01f;
     }
 
     [PunRPC]
