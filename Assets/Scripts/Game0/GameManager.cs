@@ -41,6 +41,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     private string[] ranks = new string[] { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" };
 
     private bool isMasterTurn;
+    private bool isWating;
 
     private void Awake()
     {
@@ -105,7 +106,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                 //        }
                 //    }
                 //}
-                if (Input.touchCount > 0)
+                if (!isWating && Input.touchCount > 0)
                 {
                     Touch touch = Input.GetTouch(0);
                     if (touch.phase == TouchPhase.Began)
@@ -124,7 +125,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                                 cardSelected.view.RPC("FlipUp", RpcTarget.MasterClient);
                                 //cardSelected.Flip();
                                 //Debug.Log(target.rank + target.suit + "--" + cardSelected.rank + cardSelected.suit);
-                                CompareWithTargetCard(cardSelected);
+                                StartCoroutine(CompareWithTargetCard(cardSelected));
                             }
                         }
                     }
@@ -146,12 +147,13 @@ public class GameManager : MonoBehaviourPunCallbacks
             notifyTxt.text = "...";
         }
     }
-    public void CompareWithTargetCard(Card selected)
+    IEnumerator CompareWithTargetCard(Card selected)
     {
-        //yield return new WaitForSeconds(1.5f);
+        isWating = true;
+        yield return new WaitForSeconds(1f);
         if(target.suit == selected.suit && target.rank == selected.rank)
         {
-            // state = GameState.End;
+            
             view.RPC("ChangeState", RpcTarget.All, GameState.End);
             //Debug.Log("End Game");
             notifyTxt.text = "You win";
@@ -163,6 +165,7 @@ public class GameManager : MonoBehaviourPunCallbacks
             selected.view.RPC("FlipDown", RpcTarget.MasterClient);
             view.RPC("ChangeTurn", RpcTarget.All);
         }
+        isWating = false;
     }
 
     public override void OnPlayerEnteredRoom(Player newPlayer)
@@ -238,6 +241,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         state = st;
         Debug.Log("Change state");
+        notifyTxt.text = st.ToString();
     }
     [PunRPC]
     public void EndGame()

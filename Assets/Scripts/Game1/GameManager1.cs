@@ -105,15 +105,27 @@ public class GameManager1 : MonoBehaviourPunCallbacks
 
     private void InstantiateMyCard()
     {
-        foreach(var card in myCardList)
+        Vector2 screemPos = Camera.main.ViewportToScreenPoint(new Vector2(0.5f, 0.3f));
+        Ray ray = ARcamera.ScreenPointToRay(screemPos);
+        RaycastHit hit;
+        if(Physics.Raycast(ray,out hit))
         {
-            Vector2 screemPos = ARcamera.transform.position - new Vector3(0, 0.5f, -0.8f);
+            var wall = hit.collider;
+            
+            if(wall != null && wall.tag == "Wall")
+            {
+                var obj = PhotonNetwork.Instantiate("Red_PlayingCards_Club3", wall.transform.position, Quaternion.identity);
+                wall.enabled = false;
+            }
+        }
+        /*foreach (var card in myCardList)
+        {
+            //Vector2 screemPos = ARcamera.transform.position - new Vector3(0, 0.5f, -0.8f);
             var obj = PhotonNetwork.Instantiate("Red_PlayingCards_" + card.suit + card.rank, screemPos, Quaternion.identity);
             obj.GetComponent<Card>().rank = card.rank;
             obj.GetComponent<Card>().suit = card.suit;
-            //obj.transform.LookAt(ARcamera.transform);
 
-        }
+        }*/
     }
 
     IEnumerator CreateTable()
