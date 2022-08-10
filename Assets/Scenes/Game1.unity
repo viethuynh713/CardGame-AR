@@ -1636,7 +1636,7 @@ MonoBehaviour:
   notifyTxt: {fileID: 555777185}
   roomNameTxt: {fileID: 1987779049}
   countPlayer: {fileID: 1848879380}
-  endGamePnl: {fileID: 0}
+  endGamePnl: {fileID: 761681190}
   table: {fileID: 7716129328419237593, guid: 8e5a9ad116c83b148bf0b0ef1da5f8c3, type: 3}
   arRaycatManager: {fileID: 952579235}
   ARcamera: {fileID: 658788790}
