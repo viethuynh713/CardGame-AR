@@ -50,7 +50,13 @@ public class Card : MonoBehaviour
         transform.localEulerAngles = new Vector3(0, 0, 180);
         gameObject.transform.SetParent(GameManager.instance.table.transform);
     }
-    
+
+    public void SetInitValueGame1(string suit, string rank)
+    {
+        this.rank = rank;
+        this.suit = suit;
+
+    }
     public override bool Equals(object other)
     {
         if(other.GetType().Equals(this.GetType()))

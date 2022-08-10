@@ -54,6 +54,9 @@ MonoBehaviour:
   - FlipUp
   - InitMyCard
   - InitMyCardList
+  - SetParentGame0
+  - SelectCards
+  - SetInitValue
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

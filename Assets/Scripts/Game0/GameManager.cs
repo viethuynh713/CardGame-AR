@@ -124,7 +124,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                                 cardSelected.view.RPC("FlipUp", RpcTarget.MasterClient);
                                 //cardSelected.Flip();
                                 //Debug.Log(target.rank + target.suit + "--" + cardSelected.rank + cardSelected.suit);
-                                StartCoroutine(CompareWithTargetCard(cardSelected));
+                                CompareWithTargetCard(cardSelected);
                             }
                         }
                     }
@@ -137,10 +137,18 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         Debug.Log("Change turn");
         isMasterTurn = !isMasterTurn;
+        if ((isMasterTurn && PhotonNetwork.IsMasterClient) || (!isMasterTurn && !PhotonNetwork.IsMasterClient))
+        {
+            notifyTxt.text = "Your turn ..";
+        }
+        else
+        {
+            notifyTxt.text = "...";
+        }
     }
-    IEnumerator CompareWithTargetCard(Card selected)
+    public void CompareWithTargetCard(Card selected)
     {
-        yield return new WaitForSeconds(1.5f);
+        //yield return new WaitForSeconds(1.5f);
         if(target.suit == selected.suit && target.rank == selected.rank)
         {
             // state = GameState.End;
