@@ -180,12 +180,12 @@ public class GameManager1 : MonoBehaviourPunCallbacks
                             }
                         }
                     }
-                    if (touch.phase == TouchPhase.Moved)
+                   /* if (touch.phase == TouchPhase.Moved)
                     {
                         TransformCardSelected();
                         listCardsSelected.Clear();
                         view.RPC(nameof(ChangeTurn), RpcTarget.All);
-                    }
+                    }*/
                 }
             }
         }
@@ -248,13 +248,13 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     }
     public void StartBtn()
     {
-        /*if (GameState.Playing == state && isMyTurn)
+        if (GameState.Playing == state && isMyTurn)
         {
             TransformCardSelected();
             listCardsSelected.Clear();
             view.RPC(nameof(ChangeTurn), RpcTarget.All);
-        }*/
-         if (PhotonNetwork.IsMasterClient && state == GameState.Ready)
+        }
+        if (PhotonNetwork.IsMasterClient && state == GameState.Ready)
         {
             view.RPC(nameof(ChangeState), RpcTarget.All, GameState.Playing);
             PhotonNetwork.CurrentRoom.IsOpen = false;
