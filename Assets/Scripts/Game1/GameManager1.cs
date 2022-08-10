@@ -119,7 +119,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
             {
                 pointSpawn = PhotonNetwork.Instantiate("PointSpawnCard", wall.transform.position, wall.transform.rotation);
                 wall.enabled = false;
-                pointSpawn.name = PhotonNetwork.AuthValues.UserId;
+                pointSpawn.GetComponent<PointSpawn>().ChangeName(PhotonNetwork.AuthValues.UserId);
                 pointSpawn.transform.eulerAngles = new Vector3(pointSpawn.transform.eulerAngles.x -80, pointSpawn.transform.eulerAngles.y, pointSpawn.transform.eulerAngles.z);
             }
         }
