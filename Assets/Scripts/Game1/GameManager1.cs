@@ -57,8 +57,8 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         //PhotonNetwork.SetPlayerCustomProperties(new ExitGames.Client.Photon.Hashtable());
         view = gameObject.GetComponent<PhotonView>();
         hits = new List<ARRaycastHit>();
-        //state = GameState.Waiting;
-        state = GameState.Ready;
+        state = GameState.Waiting;
+        //state = GameState.Ready;
         roomNameTxt.text = PhotonNetwork.CurrentRoom.Name;
         countPlayer.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString() + "/" + PhotonNetwork.CurrentRoom.MaxPlayers.ToString();
         if (PhotonNetwork.IsMasterClient)
@@ -108,7 +108,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
 
     private void InstantiateMyCard()
     {
-        Vector2 screemPos = Camera.main.ViewportToScreenPoint(new Vector2(0.5f, 0.3f));
+        Vector2 screemPos = Camera.main.ViewportToScreenPoint(new Vector2(0.5f, 0.2f));
         Ray ray = ARcamera.ScreenPointToRay(screemPos);
         RaycastHit hit;
         if(Physics.Raycast(ray,out hit))
@@ -208,7 +208,6 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         }
         else
         {
-            //notifyTxt.text = "Turn of " + PhotonNetwork.CurrentRoom.Players[turn].NickName;
             isMyTurn = false;
             notifyTxt.text = "Wating ...";
         }
