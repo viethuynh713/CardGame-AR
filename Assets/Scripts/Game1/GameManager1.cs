@@ -40,6 +40,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     private List<Card> listCardsSelected;
     private int turn;
     public GameObject pointSpawn;
+    public Collider wall;
 
     public int countCard;
     public string rank;
@@ -106,7 +107,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         RaycastHit hit;
         if(Physics.Raycast(ray,out hit))
         {
-            var wall = hit.collider;
+            wall = hit.collider;
             
             if(wall != null && wall.tag == "Wall")
             {
@@ -402,6 +403,8 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         myCardList.Clear();
         listCard.Clear();
         turn = -1;
+        wall.enabled = true;
+        
     }
     public void HomeBtn()
     {
