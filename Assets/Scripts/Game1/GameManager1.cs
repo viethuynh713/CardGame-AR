@@ -62,7 +62,6 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         view = gameObject.GetComponent<PhotonView>();
         hits = new List<ARRaycastHit>();
         state = GameState.Waiting;
-        //state = GameState.Ready;
         roomNameTxt.text = PhotonNetwork.CurrentRoom.Name;
         countPlayer.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString() + "/" + PhotonNetwork.CurrentRoom.MaxPlayers.ToString();
         if (PhotonNetwork.IsMasterClient)
@@ -75,9 +74,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
             UpdateListPlayerID(player.Value.UserId);
         }
         playerID.Sort();
-        //Debug.Log(PhotonNetwork.LocalPlayer.NickName + "//" + PhotonNetwork.LocalPlayer.UserId);
         Debug.Log(PhotonNetwork.AuthValues.UserId);
-        //TestFunc();
     }
 
   /*  private void NetworkingClient_EventReceived(ExitGames.Client.Photon.EventData obj)
@@ -86,16 +83,6 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         PhotonNetwork.RaiseEvent(1, 0, RaiseEventOptions.Default, ExitGames.Client.Photon.SendOptions.SendUnreliable);
     }*/
 
-    private void TestFunc()
-    {
-        Vector3 screemPos = ARcamera.transform.position - ARcamera.transform.forward*3 ;
-        Debug.Log(screemPos);
-        var obj = PhotonNetwork.Instantiate("Red_PlayingCards_Club3", screemPos, Quaternion.identity);
-        obj.transform.SetParent(table.transform);
-        obj.transform.position = screemPos;
-        obj.transform.rotation = new Quaternion(0.0f, ARcamera.transform.rotation.y, 0.0f, ARcamera.transform.rotation.w);
-
-    }
 
     [PunRPC]
     public void InitMyCardList(string json,string id)
@@ -152,8 +139,6 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     }
     private void Update()
     {
-
-        Debug.Log(state.ToString());
         if (PhotonNetwork.IsMasterClient && state == GameState.Ready)
         {
             Vector2 screemPos = Camera.main.ViewportToScreenPoint(new Vector2(0.5f, 0.5f));
@@ -169,7 +154,8 @@ public class GameManager1 : MonoBehaviourPunCallbacks
                 if (Input.touchCount > 0)
                 {
                     Touch touch = Input.GetTouch(0);
-                    if (touch.phase == TouchPhase.Began)
+                    
+                    if (touch.phase == TouchPhase.Stationary)
                     {
                         Ray ray = ARcamera.ScreenPointToRay(touch.position);
                         RaycastHit hit;
@@ -190,9 +176,15 @@ public class GameManager1 : MonoBehaviourPunCallbacks
                                     cardSelected.isSelected = false;
                                 }
                                 cardSelected.HandleSelect();
-                                Debug.Log("Quantity card is selected: " + listCardsSelected.Count);
+                                //Debug.Log("Quantity card is selected: " + listCardsSelected.Count);
                             }
                         }
+                    }
+                    if (touch.phase == TouchPhase.Moved)
+                    {
+                        TransformCardSelected();
+                        listCardsSelected.Clear();
+                        view.RPC(nameof(ChangeTurn), RpcTarget.All);
                     }
                 }
             }
@@ -215,6 +207,11 @@ public class GameManager1 : MonoBehaviourPunCallbacks
             isMyTurn = false;
             notifyTxt.text = "Wating ...";
         }
+            if (countCard == 0)
+            {
+                notifyTxt.text = "Rank " + rank;
+                view.RPC("ChangeTurn", RpcTarget.Others);
+            }
 
 
     }
@@ -222,12 +219,11 @@ public class GameManager1 : MonoBehaviourPunCallbacks
 
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
-        if (state == GameState.Waiting)
-        {
+
             playerID.Add(newPlayer.UserId);
             playerID.Sort();
-        }
-        if (PhotonNetwork.CurrentRoom.PlayerCount == 2)
+        
+        if (PhotonNetwork.CurrentRoom.PlayerCount >= 2)
         {
             view.RPC(nameof(ChangeState), RpcTarget.All, GameState.Ready);
         }
@@ -252,13 +248,13 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     }
     public void StartBtn()
     {
-        if (GameState.Playing == state && isMyTurn)
+        /*if (GameState.Playing == state && isMyTurn)
         {
             TransformCardSelected();
             listCardsSelected.Clear();
             view.RPC(nameof(ChangeTurn), RpcTarget.All);
-        }
-        else if (PhotonNetwork.IsMasterClient && state == GameState.Ready)
+        }*/
+         if (PhotonNetwork.IsMasterClient && state == GameState.Ready)
         {
             view.RPC(nameof(ChangeState), RpcTarget.All, GameState.Playing);
             PhotonNetwork.CurrentRoom.IsOpen = false;
@@ -314,7 +310,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         countCard -= listCardsSelected.Count;
         if(countCard == 0)
         {
-            view.RPC(nameof(EndGame), RpcTarget.All);
+            view.RPC(nameof(ChoseRank), RpcTarget.All);
         }
     }
 
@@ -325,7 +321,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         notifyTxt.text = "Change state to " + st.ToString();
     }
     [PunRPC]
-    public void EndGame()
+    public void ChoseRank()
     {
         notifyTxt.text = "Rank " + rank;
         switch(rank)
