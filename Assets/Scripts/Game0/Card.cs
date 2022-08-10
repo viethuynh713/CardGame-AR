@@ -52,13 +52,17 @@ public class Card : MonoBehaviour
         transform.localEulerAngles = new Vector3(0, 0, 180);
         gameObject.transform.SetParent(GameManager.instance.table.transform);
     }
-
-    public void SetInitValueGame1(string suit, string rank)
+    [PunRPC]
+    public void SetInitValueGame1(string suit, string rank,string id)
     {
-        this.rank = rank;
         this.suit = suit;
-
+        this.rank = rank;
+        Debug.Log("SetParent");
+        var point = GameObject.Find(id);
+        if(point != null)gameObject.transform.SetParent(point.transform);
+        
     }
+
     public override bool Equals(object other)
     {
         if(other.GetType().Equals(this.GetType()))

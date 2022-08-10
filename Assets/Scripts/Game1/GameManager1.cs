@@ -38,7 +38,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     private List<string> playerID = new List<string>();
     private List<Card> listCardsSelected;
     private int turn;
-    private GameObject pointSpawn;
+    public GameObject pointSpawn;
 
     private void Awake()
     {
@@ -119,6 +119,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
             {
                 pointSpawn = PhotonNetwork.Instantiate("PointSpawnCard", wall.transform.position, wall.transform.rotation);
                 wall.enabled = false;
+                pointSpawn.name = PhotonNetwork.AuthValues.UserId;
                 pointSpawn.transform.eulerAngles = new Vector3(pointSpawn.transform.eulerAngles.x -80, pointSpawn.transform.eulerAngles.y, pointSpawn.transform.eulerAngles.z);
             }
         }
@@ -126,10 +127,8 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         {
             for(int i = 0; i<myCardList.Count;i++)
             {
-                var obj = PhotonNetwork.Instantiate("Red_PlayingCards_" + myCardList[i].suit + myCardList[i].rank, pointSpawn.transform.position,pointSpawn.transform.rotation);
-                obj.transform.SetParent(pointSpawn.transform);
-                obj.GetComponent<Card>().rank = myCardList[i].rank;
-                obj.GetComponent<Card>().suit = myCardList[i].suit;
+                var obj = PhotonNetwork.Instantiate("Red_PlayingCards_" + myCardList[i].suit + myCardList[i].suit, pointSpawn.transform.position,pointSpawn.transform.rotation);
+                obj.GetComponent<Card>().view.RPC("SetInitValueGame1", RpcTarget.All, myCardList[i].suit, myCardList[i].rank, PhotonNetwork.AuthValues.UserId);
                 obj.transform.localPosition = new Vector3(-0.16f + 0.03f * i, i * 0.001f, 0);
                 
             }
