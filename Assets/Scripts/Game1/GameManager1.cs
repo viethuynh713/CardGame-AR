@@ -15,6 +15,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     [SerializeField] private Text notifyTxt;
     [SerializeField] private Text roomNameTxt;
     [SerializeField] private Text countPlayer;
+    [SerializeField] private GameObject endGamePnl;
 
     [Header("Prefabs")]
     public GameObject table;
@@ -155,7 +156,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
                 {
                     Touch touch = Input.GetTouch(0);
                     
-                    if (touch.phase == TouchPhase.Stationary)
+                    if (touch.phase == TouchPhase.Began)
                     {
                         Ray ray = ARcamera.ScreenPointToRay(touch.position);
                         RaycastHit hit;
@@ -324,20 +325,35 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     public void ChoseRank()
     {
         notifyTxt.text = "Rank " + rank;
-        switch(rank)
+        if (countCard != 0)
         {
-            case "1st":
-                rank = "2nd";
-                break;
-            case "2nd":
-                rank = "3th";
-                break;
-            case "3th":
-                rank = "4th";
-                break;
-            default:
-                rank = "...";
-                break;
+            switch (rank)
+            {
+                case "1st":
+                    rank = "2nd";
+                    if(PhotonNetwork.CurrentRoom.PlayerCount == 2)
+                    {
+                        EndGame();
+                    }
+                    break;
+                case "2nd":
+                    rank = "3th";
+                    if (PhotonNetwork.CurrentRoom.PlayerCount == 3)
+                    {
+                        EndGame();
+                    }
+                    break;
+                case "3th":
+                    rank = "4th";
+                    if (PhotonNetwork.CurrentRoom.PlayerCount == 4)
+                    {
+                        EndGame();
+                    }
+                    break;
+                default:
+                    rank = "...";
+                    break;
+            }
         }
     }
     public void UpdateListPlayerID(string id,bool isAdd = true)
@@ -355,6 +371,14 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         }
     }
 
+    [PunRPC]
+    public void EndGame()
+    {
+        view.RPC(nameof(ChangeState), RpcTarget.All, GameState.End);
+        notifyTxt.text = "Endgame";
 
+        endGamePnl.SetActive(true);
+        //endGamePnl.GetComponent<HandleEndGame>();
+    }   
 
 }
