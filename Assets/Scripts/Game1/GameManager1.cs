@@ -236,7 +236,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     {
         playerID.Remove(otherPlayer.UserId);
         playerID.Sort();
-        if (state == GameState.Ready)
+        if (PhotonNetwork.CurrentRoom.PlayerCount ==1)
         {
             state = GameState.Waiting;
         }
@@ -333,21 +333,21 @@ public class GameManager1 : MonoBehaviourPunCallbacks
                     rank = "2nd";
                     if(PhotonNetwork.CurrentRoom.PlayerCount == 2)
                     {
-                        EndGame();
+                        view.RPC(nameof(EndGame), RpcTarget.All);
                     }
                     break;
                 case "2nd":
                     rank = "3th";
                     if (PhotonNetwork.CurrentRoom.PlayerCount == 3)
                     {
-                        EndGame();
+                        view.RPC(nameof(EndGame), RpcTarget.All);
                     }
                     break;
                 case "3th":
                     rank = "4th";
                     if (PhotonNetwork.CurrentRoom.PlayerCount == 4)
                     {
-                        EndGame();
+                        view.RPC(nameof(EndGame), RpcTarget.All);
                     }
                     break;
                 default:
@@ -374,11 +374,38 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     [PunRPC]
     public void EndGame()
     {
-        view.RPC(nameof(ChangeState), RpcTarget.All, GameState.End);
+        state = GameState.End;
         notifyTxt.text = "Endgame";
 
         endGamePnl.SetActive(true);
         //endGamePnl.GetComponent<HandleEndGame>();
     }   
-
+    public void RestartBtn()
+    {
+        if(PhotonNetwork.IsMasterClient)
+        {
+            view.RPC(nameof(InitGame), RpcTarget.All);
+        }
+    }
+    [PunRPC]
+    public void InitGame()
+    {
+        state = GameState.Ready;
+        endGamePnl.SetActive(false);
+        foreach(var sp in GameObject.FindGameObjectsWithTag("PointSpawn"))
+        {
+            Destroy(sp);
+        }
+        posY = 0;
+        rank = "1st";
+        listCardsSelected.Clear();
+        myCardList.Clear();
+        listCard.Clear();
+        turn = -1;
+    }
+    public void HomeBtn()
+    {
+        PhotonNetwork.LeaveRoom();
+        PhotonNetwork.LoadLevel("Menu");
+    }
 }
