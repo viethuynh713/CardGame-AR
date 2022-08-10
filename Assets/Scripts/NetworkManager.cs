@@ -17,7 +17,12 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     }
     void Start()
     {
-        PhotonNetwork.ConnectUsingSettings();
+        if(!PhotonNetwork.IsConnected)
+            PhotonNetwork.ConnectUsingSettings();
+        else
+        {
+            notifyTxt.text = "Hello " + PhotonNetwork.NickName;
+        }
     }
     public override void OnConnectedToMaster()
     {

@@ -275,7 +275,14 @@ public class GameManager1 : MonoBehaviourPunCallbacks
             {
                 return Random.RandomRange(-1, 2);
             });
-            var player = PhotonNetwork.CurrentRoom.Players[1];
+            Player player = PhotonNetwork.CurrentRoom.Players[1];
+            if (player == null)
+            {
+                foreach (var pr in PhotonNetwork.CurrentRoom.Players)
+                {
+                    player = pr.Value;
+                }
+            }
             for (int i = 0; i < PhotonNetwork.CurrentRoom.PlayerCount; i++)
             {
                 var lstMyCard = listCard.GetRange(i * 12, 13);
