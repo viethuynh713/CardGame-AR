@@ -40,6 +40,9 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     private int turn;
     public GameObject pointSpawn;
 
+    public int countCard;
+    public string rank;
+
     private void Awake()
     {
         instance = this;
@@ -49,6 +52,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     private void Start()
     {
         posY = 0;
+        rank = "1st";
         listCardsSelected = new List<Card>();
         myCardList.Clear();
         listCard.Clear();
@@ -100,6 +104,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         if(id == PhotonNetwork.AuthValues.UserId)
         {
             myCardList = JsonConvert.DeserializeObject<List<CardData>>(json);
+            countCard = myCardList.Count;
             Debug.Log(json);
             InstantiateMyCard();
         }
@@ -306,6 +311,11 @@ public class GameManager1 : MonoBehaviourPunCallbacks
 
         }
         posY += 0.01f;
+        countCard -= listCardsSelected.Count;
+        if(countCard == 0)
+        {
+            view.RPC(nameof(EndGame), RpcTarget.All);
+        }
     }
 
     [PunRPC]
@@ -317,7 +327,22 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     [PunRPC]
     public void EndGame()
     {
-        notifyTxt.text = "You lose !!";
+        notifyTxt.text = "Rank " + rank;
+        switch(rank)
+        {
+            case "1st":
+                rank = "2nd";
+                break;
+            case "2nd":
+                rank = "3th";
+                break;
+            case "3th":
+                rank = "4th";
+                break;
+            default:
+                rank = "...";
+                break;
+        }
     }
     public void UpdateListPlayerID(string id,bool isAdd = true)
     {

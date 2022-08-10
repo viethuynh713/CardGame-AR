@@ -6,7 +6,7 @@ using Photon.Pun;
 public class PointSpawn : MonoBehaviour
 {
     public PhotonView view;
-    void Start()
+    void Awake()
     {
         view = GetComponent<PhotonView>();
     }
