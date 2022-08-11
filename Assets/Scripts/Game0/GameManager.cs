@@ -159,7 +159,8 @@ public class GameManager : MonoBehaviourPunCallbacks
             view.RPC("ChangeState", RpcTarget.All, GameState.End);
             //Debug.Log("End Game");
             notifyTxt.text = "You win";
-            view.RPC("EndGame", RpcTarget.Others);
+            restartBtn.gameObject.SetActive(true);
+            view.RPC(nameof(EndGame), RpcTarget.Others);
         }
         else
         {
@@ -197,7 +198,7 @@ public class GameManager : MonoBehaviourPunCallbacks
             RandomListCard();
             table.GetComponent<InitBoard>().Init();
             var idx = UnityEngine.Random.RandomRange(0, listCard.Count);
-            view.RPC("SetTargetCard", RpcTarget.All, listCard[idx].suit, listCard[idx].rank);
+            view.RPC(nameof(SetTargetCard), RpcTarget.All, listCard[idx].suit, listCard[idx].rank);
             //target = listCard[UnityEngine.Random.RandomRange(0, listCard.Count)];
             Debug.Log(target.rank + target.suit);
         }
@@ -263,15 +264,24 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         restartBtn.gameObject.SetActive(false);
         isMasterTurn = true;
-        if(PhotonNetwork.CurrentRoom.PlayerCount == 2)
+        listCard.Clear();
+        if (PhotonNetwork.CurrentRoom.PlayerCount == 2)
         {
-            state = GameState.Ready;
+            view.RPC(nameof(ChangeState), RpcTarget.All,GameState.Ready);
+            //state = GameState.Ready;
         }
         else
         {
             state = GameState.Waiting;
+            view.RPC(nameof(ChangeState), RpcTarget.All, GameState.Waiting);
         }
-        foreach(var card in GameObject.FindGameObjectsWithTag("Card"))
+        view.RPC(nameof(ClearOldCard), RpcTarget.All);
+
+    }
+    [PunRPC]
+    public void ClearOldCard()
+    {
+        foreach (var card in GameObject.FindGameObjectsWithTag("Card"))
         {
             Destroy(card);
         }

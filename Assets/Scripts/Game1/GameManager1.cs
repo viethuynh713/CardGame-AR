@@ -55,7 +55,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     private void Start()
     {
 
-        wall.enabled = true;
+        //wall.enabled = true;
         listRank.Clear();
         endGamePnl.SetActive(false);
         posY = 0;
@@ -71,11 +71,11 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         state = GameState.Waiting;
         roomNameTxt.text = PhotonNetwork.CurrentRoom.Name;
         countPlayer.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString() + "/" + PhotonNetwork.CurrentRoom.MaxPlayers.ToString();
-        if (PhotonNetwork.IsMasterClient)
+ /*       if (PhotonNetwork.IsMasterClient)
         {
             PhotonNetwork.Instantiate("Table", Vector3.zero, Quaternion.identity);           
-        }
-        StartCoroutine(CreateTable());
+        }*/
+        //StartCoroutine(CreateTable());
         foreach(var player in PhotonNetwork.CurrentRoom.Players)
         {
             UpdateListPlayerID(player.Value.UserId);
@@ -136,14 +136,14 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         }
     }
 
-    IEnumerator CreateTable()
+/*    IEnumerator CreateTable()
     {
         while(GameObject.FindGameObjectWithTag("Table") == null)
         {
             yield return null;
         }
         table = GameObject.FindGameObjectWithTag("Table");
-    }
+    }*/
     private void Update()
     {
         if (PhotonNetwork.IsMasterClient && state == GameState.Ready)

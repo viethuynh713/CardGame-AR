@@ -134,5 +134,10 @@ public class ChangeColor : MonoBehaviour
 
         }
     }
+    public void GotoMenu()
+    {
+        PhotonNetwork.LeaveRoom();
+        PhotonNetwork.LoadLevel("Menu");
+    }
 
 }
