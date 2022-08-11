@@ -14,8 +14,12 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public Text notifyTxt;
     public Text menuNotifyTxt;
     private void Start() {
-        if(!PhotonNetwork.IsConnected)
+        if (!PhotonNetwork.IsConnected)
+
+        {
             PhotonNetwork.ConnectUsingSettings();
+            Debug.Log("Connecting.....");
+        }
         else
         {
             notifyTxt.text = "Connected";
@@ -24,16 +28,19 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             instance = this;
     }
 
+    public override void OnConnected()
+    {
+    }
     public override void OnConnectedToMaster()
     {
         menuNotifyTxt.text = "Connected successfully";
-        notifyTxt.text = "Connected successfully";
+        //notifyTxt.text = "Connected successfully";
     }
     public void JoinGameLobby(string NameLobby)
     {
         if(!PhotonNetwork.IsConnected)
         {
-            menuNotifyTxt.text = "Watting to connect server";
+            //menuNotifyTxt.text = "Watting to connect server";
             notifyTxt.text = "Watting to connect server";
             return;
         }

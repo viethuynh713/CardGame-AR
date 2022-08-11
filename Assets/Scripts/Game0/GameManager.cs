@@ -23,6 +23,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     [SerializeField] private Text roomNameTxt;
     [SerializeField] private Text countPlayer;
     [SerializeField] private RawImage targetCardImg;
+    [SerializeField] private Button restartBtn;
 
     [Header("Prefabs")]
     public GameObject table;
@@ -51,6 +52,7 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     private void Start()
     {
+        restartBtn.gameObject.SetActive(false);
         isMasterTurn = true;
         view = gameObject.GetComponent<PhotonView>();
         hits = new List<ARRaycastHit>();
@@ -76,7 +78,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     private void Update()
     {
 
-        Debug.Log(state.ToString());
+        //Debug.Log(state.ToString());
         if (PhotonNetwork.IsMasterClient && state == GameState.Ready)
         {
             Vector2 screemPos = Camera.main.ViewportToScreenPoint(new Vector2(0.5f, 0.5f));
@@ -180,7 +182,9 @@ public class GameManager : MonoBehaviourPunCallbacks
     }
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
-        notifyTxt.text = "Player " + otherPlayer.UserId.Substring(0, 3) + "leave";
+
+        notifyTxt.text = "Player " + otherPlayer.NickName + "leave";
+        state = GameState.Waiting;
         countPlayer.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString() + "/" + PhotonNetwork.CurrentRoom.MaxPlayers.ToString();
     }
     public void StartBtn()
@@ -247,6 +251,30 @@ public class GameManager : MonoBehaviourPunCallbacks
     public void EndGame()
     {
         notifyTxt.text = "You lose !!";
+        restartBtn.gameObject.SetActive(true);
+
+    }
+    public void GotoMenu()
+    {
+        PhotonNetwork.LeaveRoom();
+        PhotonNetwork.LoadLevel("Menu");
+    }
+    public void RestartGame()
+    {
+        restartBtn.gameObject.SetActive(false);
+        isMasterTurn = true;
+        if(PhotonNetwork.CurrentRoom.PlayerCount == 2)
+        {
+            state = GameState.Ready;
+        }
+        else
+        {
+            state = GameState.Waiting;
+        }
+        foreach(var card in GameObject.FindGameObjectsWithTag("Card"))
+        {
+            Destroy(card);
+        }
     }
 
 
