@@ -1,13 +1,13 @@
 ﻿
-using UnityEngine.XR.ARFoundation;
-using System.Collections.Generic;
-using UnityEngine;
+using DG.Tweening;
+using Newtonsoft.Json;
 using Photon.Pun;
-using UnityEngine.UI;
 using Photon.Realtime;
 using System.Collections;
-using Newtonsoft.Json;
-using DG.Tweening;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.XR.ARFoundation;
 public class GameManager1 : MonoBehaviourPunCallbacks
 {
     public static GameManager1 instance;
@@ -240,7 +240,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     {
         playerID.Remove(otherPlayer.UserId);
         playerID.Sort();
-        if (PhotonNetwork.CurrentRoom.PlayerCount ==1)
+        if (PhotonNetwork.CurrentRoom.PlayerCount == 1)
         {
             state = GameState.Waiting;
         }
@@ -259,7 +259,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
             listCardsSelected.Clear();
             view.RPC(nameof(ChangeTurn), RpcTarget.All);
         }
-        if (PhotonNetwork.IsMasterClient && state == GameState.Ready)
+        else if (PhotonNetwork.IsMasterClient && state == GameState.Ready)
         {
             view.RPC(nameof(ChangeState), RpcTarget.All, GameState.Playing);
             PhotonNetwork.CurrentRoom.IsOpen = false;
@@ -431,5 +431,6 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     public void HomeBtn()
     {
         PhotonNetwork.LeaveRoom();
+        PhotonNetwork.LoadLevel("Menu");
     }
 }

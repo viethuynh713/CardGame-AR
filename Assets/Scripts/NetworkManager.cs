@@ -13,14 +13,15 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public Transform roomInfoUIParent;
     public Text notifyTxt;
     public Text menuNotifyTxt;
-    private void Awake() {
+    private void Start() {
         if(!PhotonNetwork.IsConnected)
             PhotonNetwork.ConnectUsingSettings();
         else
         {
-            notifyTxt.text = "Hello " + PhotonNetwork.NickName;
+            notifyTxt.text = "Connected";
         }
-        instance = this;
+        if (instance == null)
+            instance = this;
     }
 
     public override void OnConnectedToMaster()
@@ -128,7 +129,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public override void OnLeftRoom()
     {
         Debug.Log("Left Room");
-        PhotonNetwork.LoadLevel("Menu");
+        //PhotonNetwork.LoadLevel("Menu");
     }
     public void Join(InputField name)
     {
