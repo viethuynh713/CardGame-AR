@@ -55,7 +55,15 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     private void Start()
     {
 
-        //wall.enabled = true;
+        foreach(var c in GameObject.FindGameObjectsWithTag("Card"))
+        {
+            Destroy(c);
+        }
+        foreach(var c in GameObject.FindGameObjectsWithTag("PointSpawn"))
+        {
+            Destroy(c);
+        }
+
         listRank.Clear();
         endGamePnl.SetActive(false);
         posY = 0;
