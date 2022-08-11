@@ -8,6 +8,7 @@ TagManager:
   - Table
   - Wall
   - PointSpawn
+  - Card
   layers:
   - Default
   - TransparentFX
