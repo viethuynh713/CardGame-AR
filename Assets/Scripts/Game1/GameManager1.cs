@@ -49,10 +49,12 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     {
         instance = this;
     }
+    public Dictionary<Player, string> listRank = new Dictionary<Player, string>();
 
 
     private void Start()
     {
+        listRank.Clear();
         endGamePnl.SetActive(false);
         posY = 0;
         rank = "1st";
@@ -321,7 +323,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         if(countCard == 0)
         {
             PhotonNetwork.LocalPlayer.CustomProperties["Rank"] = rank;
-            view.RPC(nameof(ChoseRank), RpcTarget.All);
+            view.RPC(nameof(ChoseRank), RpcTarget.All, PhotonNetwork.LocalPlayer,rank);
 
         }
     }
@@ -333,8 +335,10 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         notifyTxt.text = "Change state to " + st.ToString();
     }
     [PunRPC]
-    public void ChoseRank()
+    public void ChoseRank(Player id,string r)
     {
+        
+        listRank[id] = r;
         notifyTxt.text = "Rank " + rank;
         if (countCard != 0)
         {
@@ -345,6 +349,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
                     if(PhotonNetwork.CurrentRoom.PlayerCount == 2)
                     {
                         PhotonNetwork.LocalPlayer.CustomProperties["Rank"] = rank;
+                        view.RPC(nameof(ChoseRank), RpcTarget.All, PhotonNetwork.LocalPlayer, rank);
                         view.RPC(nameof(EndGame), RpcTarget.All);
                     }
                     break;
@@ -353,6 +358,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
                     if (PhotonNetwork.CurrentRoom.PlayerCount == 3)
                     {
                         PhotonNetwork.LocalPlayer.CustomProperties["Rank"] = rank;
+                        view.RPC(nameof(ChoseRank), RpcTarget.All, PhotonNetwork.LocalPlayer, rank);
                         view.RPC(nameof(EndGame), RpcTarget.All);
                     }
                     break;
@@ -361,6 +367,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
                     if (PhotonNetwork.CurrentRoom.PlayerCount == 4)
                     {
                         PhotonNetwork.LocalPlayer.CustomProperties["Rank"] = rank;
+                        view.RPC(nameof(ChoseRank), RpcTarget.All, PhotonNetwork.LocalPlayer, rank);
                         view.RPC(nameof(EndGame), RpcTarget.All);
                     }
                     break;
@@ -405,6 +412,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     [PunRPC]
     public void InitGame()
     {
+        listRank.Clear();
         state = GameState.Ready;
         endGamePnl.SetActive(false);
         foreach(var sp in GameObject.FindGameObjectsWithTag("PointSpawn"))
