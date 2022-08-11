@@ -144,14 +144,15 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         }
     }
 
-/*    IEnumerator CreateTable()
-    {
-        while(GameObject.FindGameObjectWithTag("Table") == null)
+    /*    IEnumerator CreateTable()
         {
-            yield return null;
-        }
-        table = GameObject.FindGameObjectWithTag("Table");
-    }*/
+            while(GameObject.FindGameObjectWithTag("Table") == null)
+            {
+                yield return null;
+            }
+            table = GameObject.FindGameObjectWithTag("Table");
+        }*/
+    public Card cardMove;
     private void Update()
     {
         if (PhotonNetwork.IsMasterClient && state == GameState.Ready)
@@ -180,6 +181,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
                             Debug.Log(cardSelected);
                             if (cardSelected != null && cardSelected.view.IsMine && !cardSelected.isDisable)
                             {
+                                cardMove = cardSelected;
                                 if (!cardSelected.isSelected)
                                 {
                                     listCardsSelected.Add(cardSelected);
@@ -195,12 +197,26 @@ public class GameManager1 : MonoBehaviourPunCallbacks
                             }
                         }
                     }
-                   /* if (touch.phase == TouchPhase.Moved)
+                    if (touch.phase == TouchPhase.Moved)
                     {
-                        TransformCardSelected();
-                        listCardsSelected.Clear();
-                        view.RPC(nameof(ChangeTurn), RpcTarget.All);
-                    }*/
+                        Ray ray = ARcamera.ScreenPointToRay(touch.position);
+                        RaycastHit hit;
+                        if (Physics.Raycast(ray, out hit))
+                        {
+                            var cardSelected = hit.collider.GetComponent<Card>();
+                            Debug.Log(cardSelected);
+                            if (cardSelected != null && cardSelected.view.IsMine && !cardSelected.isDisable)
+                            {
+                                if(Vector3.Distance(cardMove.transform.localPosition,cardSelected.transform.localPosition)>0.01f)
+                                {
+                                    var temp = cardMove.transform.localPosition;
+                                    cardMove.transform.localPosition = new Vector3(cardSelected.transform.localPosition.x, cardSelected.transform.localPosition.y, cardMove.transform.localPosition.z);
+                                    cardSelected.transform.localPosition = new Vector3(temp.x, temp.y, cardSelected.transform.localPosition.z);
+                                }
+                                Debug.Log("Mouse move" + cardSelected.rank);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -208,27 +224,26 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     [PunRPC]
     public void ChangeTurn()
     {
+        if (countCard == 0)
+        {
+            notifyTxt.text = "Rank " + rank;
+            isMyTurn = false;
+            return;
+        }
         Debug.Log("Change turn");
         turn ++;
         if (turn >= playerID.Count) turn = 0;
-        if (PhotonNetwork.AuthValues.UserId == playerID[turn])
+        if (PhotonNetwork.LocalPlayer.UserId == playerID[turn])
         {
-
             notifyTxt.text = "Your Turn ...";
             isMyTurn = true;
+
         }
         else
         {
             isMyTurn = false;
             notifyTxt.text = "Wating ...";
         }
-            if (countCard == 0)
-            {
-                notifyTxt.text = "Rank " + rank;
-                view.RPC("ChangeTurn", RpcTarget.Others);
-            }
-
-
     }
     
 

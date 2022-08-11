@@ -57,14 +57,10 @@ public class GameManager : MonoBehaviourPunCallbacks
         view = gameObject.GetComponent<PhotonView>();
         hits = new List<ARRaycastHit>();
         state = GameState.Waiting;
-        //view.RPC("ChangeState", RpcTarget.All, GameState.Waiting);
         roomNameTxt.text = PhotonNetwork.CurrentRoom.Name;
         countPlayer.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString() + "/" + PhotonNetwork.CurrentRoom.MaxPlayers.ToString();
-        if (PhotonNetwork.IsMasterClient)
-        {
-            PhotonNetwork.Instantiate("Table", Vector3.zero, Quaternion.identity);
-        }
-        StartCoroutine(CreateTable());
+        ClearOldCard();
+
 
     }
     IEnumerator CreateTable()
@@ -159,7 +155,8 @@ public class GameManager : MonoBehaviourPunCallbacks
             view.RPC("ChangeState", RpcTarget.All, GameState.End);
             //Debug.Log("End Game");
             notifyTxt.text = "You win";
-            restartBtn.gameObject.SetActive(true);
+            if(PhotonNetwork.IsMasterClient)
+                restartBtn.gameObject.SetActive(true);
             view.RPC(nameof(EndGame), RpcTarget.Others);
         }
         else
@@ -185,6 +182,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
 
         notifyTxt.text = "Player " + otherPlayer.NickName + "leave";
+        view.RPC(nameof(ClearOldCard), RpcTarget.All);
         state = GameState.Waiting;
         countPlayer.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString() + "/" + PhotonNetwork.CurrentRoom.MaxPlayers.ToString();
     }
@@ -210,6 +208,7 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     private void RandomListCard()
     {
+        listCard.Clear();
         while(listCard.Count != 32)
         {
             string s = suits[UnityEngine.Random.RandomRange(0, suits.Length)];
@@ -252,30 +251,36 @@ public class GameManager : MonoBehaviourPunCallbacks
     public void EndGame()
     {
         notifyTxt.text = "You lose !!";
-        restartBtn.gameObject.SetActive(true);
+        if(PhotonNetwork.IsMasterClient)
+            restartBtn.gameObject.SetActive(true);
 
     }
     public void GotoMenu()
     {
+        //if (state == GameState.Playing) return;
         PhotonNetwork.LeaveRoom();
         PhotonNetwork.LoadLevel("Menu");
     }
     public void RestartGame()
     {
-        restartBtn.gameObject.SetActive(false);
-        isMasterTurn = true;
-        listCard.Clear();
-        if (PhotonNetwork.CurrentRoom.PlayerCount == 2)
+        if (PhotonNetwork.IsMasterClient)
+
         {
-            view.RPC(nameof(ChangeState), RpcTarget.All,GameState.Ready);
-            //state = GameState.Ready;
+            restartBtn.gameObject.SetActive(false);
+            isMasterTurn = true;
+            listCard.Clear();
+            if (PhotonNetwork.CurrentRoom.PlayerCount == 2)
+            {
+                view.RPC(nameof(ChangeState), RpcTarget.All, GameState.Ready);
+                //state = GameState.Ready;
+            }
+            else
+            {
+                //state = GameState.Waiting;
+                view.RPC(nameof(ChangeState), RpcTarget.All, GameState.Waiting);
+            }
+            view.RPC(nameof(ClearOldCard), RpcTarget.All);
         }
-        else
-        {
-            state = GameState.Waiting;
-            view.RPC(nameof(ChangeState), RpcTarget.All, GameState.Waiting);
-        }
-        view.RPC(nameof(ClearOldCard), RpcTarget.All);
 
     }
     [PunRPC]
