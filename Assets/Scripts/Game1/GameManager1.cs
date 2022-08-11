@@ -240,6 +240,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     {
         playerID.Remove(otherPlayer.UserId);
         playerID.Sort();
+        Debug.Log(PhotonNetwork.CurrentRoom.PlayerCount);
         if (PhotonNetwork.CurrentRoom.PlayerCount == 1)
         {
             state = GameState.Waiting;
@@ -397,7 +398,8 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     {
         state = GameState.End;
         notifyTxt.text = "Endgame";
-
+        PhotonNetwork.CurrentRoom.IsOpen = true;
+        PhotonNetwork.CurrentRoom.IsVisible = true;
         endGamePnl.SetActive(true);
         endGamePnl.GetComponent<HandleEndGame>().Init();
         endGamePnl.GetComponent<HandleEndGame>().SetRank();
@@ -412,8 +414,15 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     [PunRPC]
     public void InitGame()
     {
-        listRank.Clear();
-        state = GameState.Ready;
+        listRank.Clear(); 
+        if (PhotonNetwork.CurrentRoom.PlayerCount == 1)
+        {
+            state = GameState.Waiting;
+        }
+        else
+        {
+            state = GameState.Ready;
+        }
         endGamePnl.SetActive(false);
         foreach(var sp in GameObject.FindGameObjectsWithTag("PointSpawn"))
         {
