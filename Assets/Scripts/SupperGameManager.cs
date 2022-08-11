@@ -28,6 +28,6 @@ public class SupperGameManager : MonoBehaviour
     {
         kindOfGame = kind;
         nameofPlayer = nameTxt.text;
-        SceneManager.LoadScene("Lobby");
+        //SceneManager.LoadScene("Lobby");
     }
 }

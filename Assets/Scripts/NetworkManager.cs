@@ -12,22 +12,33 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public GameObject roomInfoUIPrefab;
     public Transform roomInfoUIParent;
     public Text notifyTxt;
+    public Text menuNotifyTxt;
     private void Awake() {
-        instance = this;
-    }
-    void Start()
-    {
         if(!PhotonNetwork.IsConnected)
             PhotonNetwork.ConnectUsingSettings();
         else
         {
             notifyTxt.text = "Hello " + PhotonNetwork.NickName;
         }
+        instance = this;
     }
+
     public override void OnConnectedToMaster()
     {
-        TypedLobby lt = new TypedLobby(SupperGameManager.instance.KindOfGame, LobbyType.Default);
+        menuNotifyTxt.text = "Connected successfully";
+        notifyTxt.text = "Connected successfully";
+    }
+    public void JoinGameLobby(string NameLobby)
+    {
+        if(!PhotonNetwork.IsConnected)
+        {
+            menuNotifyTxt.text = "Watting to connect server";
+            notifyTxt.text = "Watting to connect server";
+            return;
+        }
+        TypedLobby lt = new TypedLobby(NameLobby, LobbyType.Default);
         PhotonNetwork.JoinLobby(lt);
+
     }
     public override void OnJoinedLobby()
     {
@@ -70,6 +81,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     }
     public void CreateRoom(InputField name)
     {
+        if (!PhotonNetwork.IsConnected) return;
         int maxPlayer;
         switch (SupperGameManager.instance.KindOfGame)
         {
@@ -78,9 +90,16 @@ public class NetworkManager : MonoBehaviourPunCallbacks
                 break;
             case "Game1":
                 maxPlayer = 4;
-/*                var hashtableProber = new ExitGames.Client.Photon.Hashtable();
-                hashtableProber["MyCards"] = 0;
-                PhotonNetwork.SetPlayerCustomProperties(hashtableProber);*/
+                if (!PhotonNetwork.LocalPlayer.CustomProperties.ContainsKey("Rank"))
+                {
+                    var hashtableProber = new ExitGames.Client.Photon.Hashtable();
+                    hashtableProber["Rank"] = "";
+                    PhotonNetwork.SetPlayerCustomProperties(hashtableProber);
+                }
+                else
+                {
+                    PhotonNetwork.LocalPlayer.CustomProperties["Rank"] = "";
+                }
                 break;
             default:
                 maxPlayer = 0;
@@ -113,6 +132,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     }
     public void Join(InputField name)
     {
+        if (!PhotonNetwork.IsConnected) return;
         PhotonNetwork.JoinRoom(name.text);
     }
     public override void OnJoinRoomFailed(short returnCode, string message)
@@ -121,6 +141,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     }
     public void JoinRandomRoom()
     {
+        if (!PhotonNetwork.IsConnected) return;
         PhotonNetwork.JoinRandomRoom();
     }
     public override void OnJoinRandomFailed(short returnCode, string message)
@@ -132,6 +153,16 @@ public class NetworkManager : MonoBehaviourPunCallbacks
                 maxPlayer = 2;
                 break;
             case "Game1":
+                if (!PhotonNetwork.LocalPlayer.CustomProperties.ContainsKey("Rank"))
+                {
+                    var hashtableProber = new ExitGames.Client.Photon.Hashtable();
+                    hashtableProber["Rank"] = "";
+                    PhotonNetwork.SetPlayerCustomProperties(hashtableProber);
+                }
+                else
+                {
+                    PhotonNetwork.LocalPlayer.CustomProperties["Rank"] = "";
+                }
                 maxPlayer = 4;
                 break;
             default:

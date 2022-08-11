@@ -162,4 +162,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   suit: 
   rank: 
+  isSelected: 0
+  isDisable: 0
   view: {fileID: 0}

@@ -53,6 +53,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
 
     private void Start()
     {
+        endGamePnl.SetActive(false);
         posY = 0;
         rank = "1st";
         listCardsSelected = new List<Card>();
@@ -319,6 +320,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         countCard -= listCardsSelected.Count;
         if(countCard == 0)
         {
+            PhotonNetwork.LocalPlayer.CustomProperties["Rank"] = rank;
             view.RPC(nameof(ChoseRank), RpcTarget.All);
         }
     }
@@ -341,6 +343,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
                     rank = "2nd";
                     if(PhotonNetwork.CurrentRoom.PlayerCount == 2)
                     {
+                        PhotonNetwork.LocalPlayer.CustomProperties["Rank"] = rank;
                         view.RPC(nameof(EndGame), RpcTarget.All);
                     }
                     break;
@@ -348,6 +351,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
                     rank = "3th";
                     if (PhotonNetwork.CurrentRoom.PlayerCount == 3)
                     {
+                        PhotonNetwork.LocalPlayer.CustomProperties["Rank"] = rank;
                         view.RPC(nameof(EndGame), RpcTarget.All);
                     }
                     break;
@@ -355,6 +359,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
                     rank = "4th";
                     if (PhotonNetwork.CurrentRoom.PlayerCount == 4)
                     {
+                        PhotonNetwork.LocalPlayer.CustomProperties["Rank"] = rank;
                         view.RPC(nameof(EndGame), RpcTarget.All);
                     }
                     break;
@@ -386,7 +391,8 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         notifyTxt.text = "Endgame";
 
         endGamePnl.SetActive(true);
-        //endGamePnl.GetComponent<HandleEndGame>();
+        endGamePnl.GetComponent<HandleEndGame>().Init();
+        endGamePnl.GetComponent<HandleEndGame>().SetRank();
     }   
     public void RestartBtn()
     {
@@ -416,6 +422,5 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     public void HomeBtn()
     {
         PhotonNetwork.LeaveRoom();
-        PhotonNetwork.LoadLevel("Menu");
     }
 }
