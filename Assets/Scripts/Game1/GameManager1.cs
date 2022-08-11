@@ -322,6 +322,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         {
             PhotonNetwork.LocalPlayer.CustomProperties["Rank"] = rank;
             view.RPC(nameof(ChoseRank), RpcTarget.All);
+
         }
     }
 

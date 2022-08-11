@@ -22,6 +22,7 @@ public class HandleEndGame : MonoBehaviour
             Text[] txt = images[i].GetComponentsInChildren<Text>();
             txt[0].text = player.Value.NickName;
             txt[1].text = (string)player.Value.CustomProperties["Rank"];
+            Debug.Log(player.Value.NickName + " Rank:" + (string)player.Value.CustomProperties["Rank"]+" //" + player.Value.CustomProperties.ContainsKey("Rank"));
         }
     }
 }

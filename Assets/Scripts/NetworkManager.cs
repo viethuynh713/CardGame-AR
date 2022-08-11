@@ -157,7 +157,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
                 {
                     var hashtableProber = new ExitGames.Client.Photon.Hashtable();
                     hashtableProber["Rank"] = "";
-                    PhotonNetwork.SetPlayerCustomProperties(hashtableProber);
+                    PhotonNetwork.LocalPlayer.SetCustomProperties(hashtableProber);
                 }
                 else
                 {
