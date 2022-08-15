@@ -4,17 +4,21 @@ using UnityEngine;
 using DG.Tweening;
 using Photon.Pun;
 
+public enum CardState
+{
+    Normal,
+    Selected,
+    Disable
+}
 public class Card : MonoBehaviour
 {
     public string suit;
     public string rank;
-    public bool isSelected;
-    public bool isDisable;
+    public CardState cardState;
     public PhotonView view;
     private void Awake()
     {
-        isDisable = false;
-        isSelected = false;
+        cardState = CardState.Normal;
         view = gameObject.GetComponent<PhotonView>();
     }
     public Card(string suit,string rank)
@@ -84,7 +88,7 @@ public class Card : MonoBehaviour
     }
     public void HandleSelect()
     {
-        if(isSelected)
+        if(cardState == CardState.Selected)
         {
             transform.DOLocalMoveZ(transform.localPosition.z + 0.05f, 0.5f);
         }

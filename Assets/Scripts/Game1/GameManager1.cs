@@ -63,7 +63,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         {
             Destroy(c);
         }
-
+        ableUndoListCard.Clear();
         listRank.Clear();
         endGamePnl.SetActive(false);
         posY = 0;
@@ -179,18 +179,18 @@ public class GameManager1 : MonoBehaviourPunCallbacks
                         {
                             var cardSelected = hit.collider.GetComponent<Card>();
                             Debug.Log(cardSelected);
-                            if (cardSelected != null && cardSelected.view.IsMine && !cardSelected.isDisable)
+                            if (cardSelected != null && cardSelected.view.IsMine && cardSelected.cardState != CardState.Disable)
                             {
                                 cardMove = cardSelected;
-                                if (!cardSelected.isSelected)
+                                if (cardSelected.cardState == CardState.Normal)
                                 {
                                     listCardsSelected.Add(cardSelected);
-                                    cardSelected.isSelected = true;
+                                    cardSelected.cardState = CardState.Selected;
                                 }
-                                else
+                                else if(cardSelected.cardState == CardState.Selected)
                                 {
                                     listCardsSelected.Remove(cardSelected);
-                                    cardSelected.isSelected = false;
+                                    cardSelected.cardState = CardState.Normal;
                                 }
                                 cardSelected.HandleSelect();
                                 //Debug.Log("Quantity card is selected: " + listCardsSelected.Count);
@@ -205,7 +205,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
                         {
                             var cardSelected = hit.collider.GetComponent<Card>();
                             Debug.Log(cardSelected);
-                            if (cardSelected != null && cardSelected.view.IsMine && !cardSelected.isDisable)
+                            if (cardSelected != null && cardSelected.view.IsMine && cardSelected.cardState != CardState.Disable)
                             {
                                 if(Vector3.Distance(cardMove.transform.localPosition,cardSelected.transform.localPosition)>0.01f)
                                 {
@@ -218,23 +218,36 @@ public class GameManager1 : MonoBehaviourPunCallbacks
                         }
                     }
                 }
+                if (Input.touchCount == 2)
+                {
+                    pointSpawn.transform.position = wall.transform.position;
+                    pointSpawn.transform.eulerAngles = new Vector3(wall.transform.eulerAngles.x -80, wall.transform.eulerAngles.y, wall.transform.eulerAngles.z);
+                }
             }
         }
     }
     [PunRPC]
-    public void ChangeTurn()
+    public void ChangeTurn(bool isRevert = false)
     {
-        if (countCard == 0)
-        {
-            notifyTxt.text = "Rank " + rank;
-            isMyTurn = false;
-            return;
-        }
         Debug.Log("Change turn");
-        turn ++;
-        if (turn >= playerID.Count) turn = 0;
+        if (isRevert)
+        {
+            turn = turn - 1 >= 0 ? turn - 1 : playerID.Count -1;
+        }
+        else
+        {
+            turn++;
+            if (turn >= playerID.Count) turn = 0;
+        }
         if (PhotonNetwork.LocalPlayer.UserId == playerID[turn])
         {
+            if (countCard == 0)
+            {
+                notifyTxt.text = "Rank " + rank;
+                isMyTurn = false;
+                view.RPC(nameof(ChangeTurn), RpcTarget.Others, false);
+                return;
+            }
             notifyTxt.text = "Your Turn ...";
             isMyTurn = true;
 
@@ -283,7 +296,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         {
             TransformCardSelected();
             listCardsSelected.Clear();
-            view.RPC(nameof(ChangeTurn), RpcTarget.All);
+            view.RPC(nameof(ChangeTurn), RpcTarget.All,false);
         }
         else if (PhotonNetwork.IsMasterClient && state == GameState.Ready)
         {
@@ -307,14 +320,14 @@ public class GameManager1 : MonoBehaviourPunCallbacks
             Player player = PhotonNetwork.MasterClient;          
             for (int i = 0; i < PhotonNetwork.CurrentRoom.PlayerCount; i++)
             {
-                var lstMyCard = listCard.GetRange(i * 12, 13);
+                var lstMyCard = listCard.GetRange(i * 13, 13);
                 //PhotonNetwork.CurrentRoom.Players[i + 1].get
                 view.RPC(nameof(InitMyCardList), RpcTarget.All, JsonConvert.SerializeObject(lstMyCard), player.UserId);
                 player = player.GetNext();
 
             }
             //var json = JsonConvert.SerializeObject(listCard);
-            view.RPC(nameof(ChangeTurn), RpcTarget.All);
+            view.RPC(nameof(ChangeTurn), RpcTarget.All,false);
 
         }
         else
@@ -326,13 +339,16 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     /// Move card to target position
     /// </summary>
     private float posY;
+    Dictionary<Card,Vector3> ableUndoListCard = new Dictionary<Card, Vector3>();
     private void TransformCardSelected()
     {
+        ableUndoListCard.Clear();
         var RandomPos = new Vector3(Random.RandomRange(-0.2f, 0.2f), posY, Random.RandomRange(-0.2f, 0.2f));
         for(int i = 0; i< listCardsSelected.Count; i++)
         {
+            ableUndoListCard.Add(listCardsSelected[i], listCardsSelected[i].transform.localPosition);
             var newPos = table.transform.position + new Vector3(0, i * 0.0005f, 0.03f * i) + RandomPos;
-            listCardsSelected[i].isDisable = true;
+            listCardsSelected[i].cardState = CardState.Disable;
             listCardsSelected[i].transform.DOMove(newPos, 2);
             listCardsSelected[i].transform.DORotate(new Vector3(0, 90, 0), 2);
 
@@ -342,11 +358,35 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         if(countCard == 0)
         {
             PhotonNetwork.LocalPlayer.CustomProperties["Rank"] = rank;
-            view.RPC(nameof(ChoseRank), RpcTarget.All, PhotonNetwork.LocalPlayer,rank);
+            view.RPC(nameof(ChoseRank), RpcTarget.All, PhotonNetwork.LocalPlayer,rank,false);
 
         }
     }
+    public void UndoCard()
+    {
+        var index = turn - 1 >= 0 ? turn - 1 : playerID.Count -1;
+        if(playerID[index] == PhotonNetwork.LocalPlayer.UserId)
+        {
+            foreach(var card in ableUndoListCard)
+            {
+                card.Key.transform.localPosition = new Vector3(card.Value.x,card.Value.y,card.Value.z - 0.05f);
+                card.Key.transform.localEulerAngles = Vector3.zero;
+                card.Key.cardState = CardState.Normal;
+            }
+            if(countCard == 0)
+            {
+                countCard += ableUndoListCard.Count;
+                view.RPC(nameof(ChoseRank), RpcTarget.All,PhotonNetwork.LocalPlayer,rank,true);
 
+            }
+            else
+            {
+                countCard += ableUndoListCard.Count;
+            }
+            ableUndoListCard.Clear();
+            view.RPC(nameof(ChangeTurn), RpcTarget.All, true);
+        }
+    }
     [PunRPC]
     public void ChangeState(GameState st)
     {
@@ -354,46 +394,53 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         notifyTxt.text = "Change state to " + st.ToString();
     }
     [PunRPC]
-    public void ChoseRank(Player id,string r)
+    public void ChoseRank(Player id,string r,bool isRevert)
     {
-        
-        listRank[id] = r;
-        notifyTxt.text = "Rank " + rank;
-        if (countCard != 0)
+        if (!isRevert)
         {
-            switch (rank)
+            listRank[id] = r;
+            notifyTxt.text = "Rank " + rank;
+            if (countCard != 0)
             {
-                case "1st":
-                    rank = "2nd";
-                    if(PhotonNetwork.CurrentRoom.PlayerCount == 2)
-                    {
-                        PhotonNetwork.LocalPlayer.CustomProperties["Rank"] = rank;
-                        view.RPC(nameof(ChoseRank), RpcTarget.All, PhotonNetwork.LocalPlayer, rank);
-                        view.RPC(nameof(EndGame), RpcTarget.All);
-                    }
-                    break;
-                case "2nd":
-                    rank = "3th";
-                    if (PhotonNetwork.CurrentRoom.PlayerCount == 3)
-                    {
-                        PhotonNetwork.LocalPlayer.CustomProperties["Rank"] = rank;
-                        view.RPC(nameof(ChoseRank), RpcTarget.All, PhotonNetwork.LocalPlayer, rank);
-                        view.RPC(nameof(EndGame), RpcTarget.All);
-                    }
-                    break;
-                case "3th":
-                    rank = "4th";
-                    if (PhotonNetwork.CurrentRoom.PlayerCount == 4)
-                    {
-                        PhotonNetwork.LocalPlayer.CustomProperties["Rank"] = rank;
-                        view.RPC(nameof(ChoseRank), RpcTarget.All, PhotonNetwork.LocalPlayer, rank);
-                        view.RPC(nameof(EndGame), RpcTarget.All);
-                    }
-                    break;
-                default:
-                    rank = "...";
-                    break;
+                switch (rank)
+                {
+                    case "1st":
+                        rank = "2nd";
+                        if (PhotonNetwork.CurrentRoom.PlayerCount == 2)
+                        {
+                            PhotonNetwork.LocalPlayer.CustomProperties["Rank"] = rank;
+                            view.RPC(nameof(ChoseRank), RpcTarget.All, PhotonNetwork.LocalPlayer, rank,false);
+                            view.RPC(nameof(EndGame), RpcTarget.All);
+                        }
+                        break;
+                    case "2nd":
+                        rank = "3th";
+                        if (PhotonNetwork.CurrentRoom.PlayerCount == 3)
+                        {
+                            PhotonNetwork.LocalPlayer.CustomProperties["Rank"] = rank;
+                            view.RPC(nameof(ChoseRank), RpcTarget.All, PhotonNetwork.LocalPlayer, rank,false);
+                            view.RPC(nameof(EndGame), RpcTarget.All);
+                        }
+                        break;
+                    case "3th":
+                        rank = "4th";
+                        if (PhotonNetwork.CurrentRoom.PlayerCount == 4)
+                        {
+                            PhotonNetwork.LocalPlayer.CustomProperties["Rank"] = rank;
+                            view.RPC(nameof(ChoseRank), RpcTarget.All, PhotonNetwork.LocalPlayer, rank,false);
+                            view.RPC(nameof(EndGame), RpcTarget.All);
+                        }
+                        break;
+                    default:
+                        rank = "...";
+                        break;
+                }
             }
+        }
+        else
+        {
+            listRank.Remove(id);
+            rank = r;
         }
     }
     public void UpdateListPlayerID(string id,bool isAdd = true)
@@ -432,7 +479,8 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     [PunRPC]
     public void InitGame()
     {
-        listRank.Clear(); 
+        listRank.Clear();
+        ableUndoListCard.Clear();
         if (PhotonNetwork.CurrentRoom.PlayerCount == 1)
         {
             state = GameState.Waiting;

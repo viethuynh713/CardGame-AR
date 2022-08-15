@@ -40,10 +40,22 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
         if(!PhotonNetwork.IsConnected)
         {
-            //menuNotifyTxt.text = "Watting to connect server";
+            
             notifyTxt.text = "Watting to connect server";
+            StartCoroutine(WatingConnect(NameLobby));
             return;
         }
+        TypedLobby lt = new TypedLobby(NameLobby, LobbyType.Default);
+        PhotonNetwork.JoinLobby(lt);
+
+    }
+    IEnumerator WatingConnect(string NameLobby)
+    {
+        while (!PhotonNetwork.IsConnected)
+        {
+            yield return null;
+        }
+        Debug.Log("Connect rùi nè !!!");
         TypedLobby lt = new TypedLobby(NameLobby, LobbyType.Default);
         PhotonNetwork.JoinLobby(lt);
 
