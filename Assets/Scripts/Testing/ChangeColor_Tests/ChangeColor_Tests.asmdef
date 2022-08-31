@@ -1,0 +1,9 @@
+{
+    "name": "ChangeColor_Tests",
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ]
+}

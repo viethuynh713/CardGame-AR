@@ -3,11 +3,14 @@ using DG.Tweening;
 using Newtonsoft.Json;
 using Photon.Pun;
 using Photon.Realtime;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
+using UnityEngine.XR.ARSubsystems;
+
 public class GameManager1 : MonoBehaviourPunCallbacks
 {
     public static GameManager1 instance;
@@ -16,17 +19,23 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     [SerializeField] private Text roomNameTxt;
     [SerializeField] private Text countPlayer;
     [SerializeField] private GameObject endGamePnl;
-
+    [SerializeField] private GameObject playBtn;
+    [SerializeField] private GameObject undoBtn;
     [Header("Prefabs")]
     public GameObject table;
+    [SerializeField] private GameObject flagPrefab;
+    
 
 
     [Header("AR component")]
-    [SerializeField] private ARRaycastManager arRaycatManager;
+    [SerializeField] private ARRaycastManager arRaycastManager;
     private List<ARRaycastHit> hits;
     [SerializeField] private Camera ARcamera;
     [Header("Network")]
     private PhotonView view;
+    [SerializeField] GameObject cameraOffset;
+    [SerializeField] ARAnchorManager arAnchorManager;
+    [SerializeField] ARPlaneManager arPlaneManager;
 
     private GameState state;
     public List<CardData> listCard = new List<CardData>();
@@ -36,7 +45,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
 
     public Player currrentTurn;
     public bool isMyTurn;
-    private List<string> playerID = new List<string>();
+    private List<string> listPlayerId = new List<string>();
     private List<Card> listCardsSelected;
     private int turn;
     public GameObject pointSpawn;
@@ -50,12 +59,33 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         instance = this;
     }
     public Dictionary<Player, string> listRank = new Dictionary<Player, string>();
-
-
+    public override void OnMasterClientSwitched(Player newMasterClient)
+    {
+        Debug.Log("Master left");
+        if(newMasterClient.UserId == PhotonNetwork.LocalPlayer.UserId && state != GameState.Playing)
+        {
+            //InitGame();
+            //Debug.Log("InitGame");
+            playBtn.gameObject.SetActive(true);
+        }
+    }
+    [PunRPC]
+    public void SetCameraOffset(byte[] id1, byte[] id2)
+    {
+        if (BitConverter.ToUInt64(id1) != 0 && BitConverter.ToUInt64(id2) != 0)
+        {
+            anchorPosID = new TrackableId(BitConverter.ToUInt64(id1), BitConverter.ToUInt64(id2));
+            notifyTxt.text = "Set ID successfully";
+        }
+    }
     private void Start()
     {
-
-        foreach(var c in GameObject.FindGameObjectsWithTag("Card"))
+        if(!PhotonNetwork.IsMasterClient)
+        {
+            playBtn.gameObject.SetActive(false);
+        }
+        undoBtn.gameObject.SetActive(false);
+        foreach (var c in GameObject.FindGameObjectsWithTag("Card"))
         {
             Destroy(c);
         }
@@ -88,17 +118,36 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         {
             UpdateListPlayerID(player.Value.UserId);
         }
-        playerID.Sort();
+        listPlayerId.Sort();
         Debug.Log(PhotonNetwork.AuthValues.UserId);
+        arPlaneManager.planesChanged += ArPlaneManager_planesChanged;
     }
 
-  /*  private void NetworkingClient_EventReceived(ExitGames.Client.Photon.EventData obj)
+    private void ArPlaneManager_planesChanged(ARPlanesChangedEventArgs obj)
     {
-        throw new System.NotImplementedException();
-        PhotonNetwork.RaiseEvent(1, 0, RaiseEventOptions.Default, ExitGames.Client.Photon.SendOptions.SendUnreliable);
-    }*/
+       /* Debug.Log("Gen plane");
+        if (!isSetAnchor)
+        {
+            var anchorPos = arAnchorManager.GetAnchor(anchorPosID);
+            if (anchorPos != null)
+            {
+                cameraOffset.transform.position = anchorPos.transform.position;
+                cameraOffset.transform.rotation = anchorPos.transform.rotation;
+                Instantiate(flagPrefab, anchorPos.transform);
+                notifyTxt.text += " - OK";
+                isSetAnchor = true;
+            }
 
+        }*/
+    }
 
+    /*  private void NetworkingClient_EventReceived(ExitGames.Client.Photon.EventData obj)
+      {
+          throw new System.NotImplementedException();
+          PhotonNetwork.RaiseEvent(1, 0, RaiseEventOptions.Default, ExitGames.Client.Photon.SendOptions.SendUnreliable);
+      }*/
+
+    //public string Myid =  PhotonNetwork.AuthValues.UserId;
     [PunRPC]
     public void InitMyCardList(string json,string id)
     {
@@ -153,12 +202,50 @@ public class GameManager1 : MonoBehaviourPunCallbacks
             table = GameObject.FindGameObjectWithTag("Table");
         }*/
     public Card cardMove;
+    public Vector3 startTouch;
+    public Vector3 endTouch;
     private void Update()
     {
+        if (!isSetAnchor)
+        {
+            var anchorPos = arAnchorManager.GetAnchor(anchorPosID);
+            if (anchorPos != null)
+            {
+                cameraOffset.transform.position = anchorPos.transform.position;
+                cameraOffset.transform.rotation = anchorPos.transform.rotation;
+                Instantiate(flagPrefab, anchorPos.transform);
+                notifyTxt.text += " - OK";
+                isSetAnchor = true;
+            }
+
+        }
+        if (PhotonNetwork.IsMasterClient && !checkAnchor)
+        {
+            if (arRaycastManager.Raycast(Camera.main.ViewportToScreenPoint(new Vector2(0.5f, 0.5f)), hits, TrackableType.Planes))
+            {
+
+                var hitPose = hits[0].pose;
+                var hitTrackableId = hits[0].trackableId;
+                var hitPlane = arPlaneManager.GetPlane(hitTrackableId);
+                var anchor = arAnchorManager.AttachAnchor(hitPlane, hitPose);
+
+                if (anchor == null)
+                {
+                    notifyTxt.text = "Error creating anchor.";
+                }
+                else
+                {
+                    anchorPosID = anchor.trackableId;
+                    checkAnchor = true;
+                    SetCameraOffset(BitConverter.GetBytes(anchorPosID.subId1), BitConverter.GetBytes(anchorPosID.subId2));
+                }
+            }
+
+        }
         if (PhotonNetwork.IsMasterClient && state == GameState.Ready)
         {
             Vector2 screemPos = Camera.main.ViewportToScreenPoint(new Vector2(0.5f, 0.5f));
-            if (arRaycatManager.Raycast(screemPos, hits, UnityEngine.XR.ARSubsystems.TrackableType.Planes))
+            if (arRaycastManager.Raycast(screemPos, hits, UnityEngine.XR.ARSubsystems.TrackableType.Planes))
             {
                 table.transform.position = hits[0].pose.position;
             }
@@ -167,104 +254,178 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         {
             if (isMyTurn)
             {
-                if (Input.touchCount > 0)
+                if (Input.touchCount == 1)
                 {
                     Touch touch = Input.GetTouch(0);
                     
                     if (touch.phase == TouchPhase.Began)
                     {
-                        Ray ray = ARcamera.ScreenPointToRay(touch.position);
-                        RaycastHit hit;
-                        if (Physics.Raycast(ray, out hit))
-                        {
-                            var cardSelected = hit.collider.GetComponent<Card>();
-                            Debug.Log(cardSelected);
-                            if (cardSelected != null && cardSelected.view.IsMine && cardSelected.cardState != CardState.Disable)
-                            {
-                                cardMove = cardSelected;
-                                if (cardSelected.cardState == CardState.Normal)
-                                {
-                                    listCardsSelected.Add(cardSelected);
-                                    cardSelected.cardState = CardState.Selected;
-                                }
-                                else if(cardSelected.cardState == CardState.Selected)
-                                {
-                                    listCardsSelected.Remove(cardSelected);
-                                    cardSelected.cardState = CardState.Normal;
-                                }
-                                cardSelected.HandleSelect();
-                                //Debug.Log("Quantity card is selected: " + listCardsSelected.Count);
-                            }
-                        }
+                        //Get start point
+                        startTouch = Camera.main.ScreenToViewportPoint(touch.position);                      
                     }
-                    if (touch.phase == TouchPhase.Moved)
+                    else if(touch.phase == TouchPhase.Ended)
                     {
-                        Ray ray = ARcamera.ScreenPointToRay(touch.position);
-                        RaycastHit hit;
-                        if (Physics.Raycast(ray, out hit))
+                        endTouch = Camera.main.ScreenToViewportPoint(touch.position);
+                        Vector2 direction = endTouch - startTouch;
+                        if(direction.x < 0.1f && direction.y > 0.15f)
                         {
-                            var cardSelected = hit.collider.GetComponent<Card>();
-                            Debug.Log(cardSelected);
-                            if (cardSelected != null && cardSelected.view.IsMine && cardSelected.cardState != CardState.Disable)
+                            // Move to table
+                            if (GameState.Playing == state)
                             {
-                                if(Vector3.Distance(cardMove.transform.localPosition,cardSelected.transform.localPosition)>0.01f)
+                                TransformCardSelected();
+                                listCardsSelected.Clear();
+                                view.RPC(nameof(ChangeTurn), RpcTarget.All, false,false);
+                            }
+                        }
+                        else
+                        {
+                            //Select card
+                            Ray ray = ARcamera.ScreenPointToRay(touch.position);
+                            RaycastHit hit;
+                            if (Physics.Raycast(ray, out hit))
+                            {
+                                var cardSelected = hit.collider.GetComponent<Card>();
+                                Debug.Log(cardSelected);
+                                if (cardSelected != null && cardSelected.view.IsMine && cardSelected.cardState != CardState.Disable && Vector3.Distance(endTouch,startTouch)<0.02f)
                                 {
-                                    var temp = cardMove.transform.localPosition;
-                                    cardMove.transform.localPosition = new Vector3(cardSelected.transform.localPosition.x, cardSelected.transform.localPosition.y, cardMove.transform.localPosition.z);
-                                    cardSelected.transform.localPosition = new Vector3(temp.x, temp.y, cardSelected.transform.localPosition.z);
+                                    cardMove = cardSelected;
+                                    if (cardSelected.cardState == CardState.Normal)
+                                    {
+                                        listCardsSelected.Add(cardSelected);
+                                        cardSelected.cardState = CardState.Selected;
+                                    }
+                                    else if (cardSelected.cardState == CardState.Selected)
+                                    {
+                                        listCardsSelected.Remove(cardSelected);
+                                        cardSelected.cardState = CardState.Normal;
+                                    }
+                                    cardSelected.HandleSelect();
+                                    //Debug.Log("Quantity card is selected: " + listCardsSelected.Count);
                                 }
-                                Debug.Log("Mouse move" + cardSelected.rank);
                             }
                         }
                     }
                 }
-                if (Input.touchCount == 2)
+            }
+            if (Input.touchCount == 1)
+            {
+                var touch = Input.GetTouch(0);
+
+                if (touch.phase == TouchPhase.Began)
                 {
-                    pointSpawn.transform.position = wall.transform.position;
-                    pointSpawn.transform.eulerAngles = new Vector3(wall.transform.eulerAngles.x -80, wall.transform.eulerAngles.y, wall.transform.eulerAngles.z);
+                    startTouch = Camera.main.ScreenToViewportPoint(touch.position);
+                    Ray ray = ARcamera.ScreenPointToRay(touch.position);
+                    RaycastHit hit;
+                    if (Physics.Raycast(ray, out hit))
+                    {
+                        var cardSelected = hit.collider.GetComponent<Card>();
+                        Debug.Log(cardSelected);
+                        if (cardSelected != null && cardSelected.view.IsMine && cardSelected.cardState != CardState.Disable)
+                        {
+                            cardMove = cardSelected;
+                        }
+                    }
                 }
+                if (touch.phase == TouchPhase.Moved)
+                {
+                    Ray ray = ARcamera.ScreenPointToRay(touch.position);
+                    RaycastHit hit;
+                    if (Physics.Raycast(ray, out hit))
+                    {
+                        var cardSelected = hit.collider.GetComponent<Card>();
+                        Debug.Log(cardSelected);
+                        if (cardSelected != null && cardSelected.view.IsMine && cardSelected.cardState != CardState.Disable)
+                        {
+                            if (Vector3.Distance(cardMove.transform.localPosition, cardSelected.transform.localPosition) > 0.01f)
+                            {
+                                var temp = cardMove.transform.localPosition;
+                                cardMove.transform.localPosition = new Vector3(cardSelected.transform.localPosition.x, cardSelected.transform.localPosition.y, cardMove.transform.localPosition.z);
+                                cardSelected.transform.localPosition = new Vector3(temp.x, temp.y, cardSelected.transform.localPosition.z);
+                            }
+                            Debug.Log("Mouse move" + cardSelected.rank);
+                        }
+                    }
+                }
+            }
+            else if (Input.touchCount == 2)
+            {
+                pointSpawn.transform.position = wall.transform.position;
+                pointSpawn.transform.eulerAngles = new Vector3(wall.transform.eulerAngles.x -80, wall.transform.eulerAngles.y, wall.transform.eulerAngles.z);
             }
         }
     }
     [PunRPC]
-    public void ChangeTurn(bool isRevert = false)
+    
+    public void ChangeTurn(bool isRevert = false,bool isPlayerLeft = false)
     {
-        Debug.Log("Change turn");
+        //Debug.Log("Change turn");
+        
+/*        if(state == GameState.End)
+        {
+            notifyTxt.text = "Rank " + rank;
+            return;
+        }*/
+        if(isPlayerLeft)
+        {
+            turn = turn - 1 >= 0 ? turn - 1 : listPlayerId.Count - 1;
+        }
         if (isRevert)
         {
-            turn = turn - 1 >= 0 ? turn - 1 : playerID.Count -1;
+            turn = turn - 1 >= 0 ? turn - 1 : listPlayerId.Count -1;
         }
         else
         {
             turn++;
-            if (turn >= playerID.Count) turn = 0;
+            if (turn >= listPlayerId.Count) turn = 0;
         }
-        if (PhotonNetwork.LocalPlayer.UserId == playerID[turn])
+        if (PhotonNetwork.LocalPlayer.UserId == listPlayerId[turn])
         {
+            undoBtn.gameObject.SetActive(false);
             if (countCard == 0)
             {
                 notifyTxt.text = "Rank " + rank;
+                state = GameState.End;
                 isMyTurn = false;
-                view.RPC(nameof(ChangeTurn), RpcTarget.Others, false);
-                return;
+                view.RPC(nameof(RemoveListPlayerId), RpcTarget.All, PhotonNetwork.LocalPlayer.UserId);
             }
-            notifyTxt.text = "Your Turn ...";
-            isMyTurn = true;
+            else
+            {
+                notifyTxt.text = "Your Turn ...";
+                isMyTurn = true;
+
+            }
 
         }
         else
         {
             isMyTurn = false;
-            notifyTxt.text = "Wating ...";
+            if(state == GameState.End)
+            {
+                notifyTxt.text = "Rank " + rank;
+            }
+            else
+            {
+                notifyTxt.text = "Wating ...";
+
+            }
+            if(PhotonNetwork.LocalPlayer.UserId != listPlayerId[turn - 1 >= 0 ? turn - 1 : listPlayerId.Count - 1])
+            {
+                undoBtn.gameObject.SetActive(false);
+            }
         }
     }
     
-
+    [PunRPC]
+    public void RemoveListPlayerId(string id)
+    {
+        listPlayerId.Remove(id);
+        ChangeTurn(false, true);
+    }
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
 
-            playerID.Add(newPlayer.UserId);
-            playerID.Sort();
+            listPlayerId.Add(newPlayer.UserId);
+            listPlayerId.Sort();
         
         if (PhotonNetwork.CurrentRoom.PlayerCount >= 2)
         {
@@ -272,21 +433,29 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         }
         notifyTxt.text = "Player " + newPlayer.NickName + " joined";
         countPlayer.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString() + "/" + PhotonNetwork.CurrentRoom.MaxPlayers.ToString();
+        view.RPC(nameof(SetCameraOffset), newPlayer, BitConverter.GetBytes(anchorPosID.subId1), BitConverter.GetBytes(anchorPosID.subId2));
         
     }
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
-        playerID.Remove(otherPlayer.UserId);
-        playerID.Sort();
-        Debug.Log(PhotonNetwork.CurrentRoom.PlayerCount);
         if (PhotonNetwork.CurrentRoom.PlayerCount == 1)
         {
             state = GameState.Waiting;
+            if(PhotonNetwork.IsMasterClient)
+            {
+                playBtn.SetActive(true);
+            }
+            InitGame();
         }
-        else
+        if(state == GameState.Playing && otherPlayer.UserId == listPlayerId[turn])
+        {
+            view.RPC(nameof(ChangeTurn), RpcTarget.All, false,true);
+        }
+        listPlayerId.Remove(otherPlayer.UserId);
+/*        else
         {
             state = GameState.Ready;
-        }
+        }*/
         notifyTxt.text = "Player " + otherPlayer.NickName + " leave";
         countPlayer.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString() + "/" + PhotonNetwork.CurrentRoom.MaxPlayers.ToString();
     }
@@ -296,7 +465,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         {
             TransformCardSelected();
             listCardsSelected.Clear();
-            view.RPC(nameof(ChangeTurn), RpcTarget.All,false);
+            view.RPC(nameof(ChangeTurn), RpcTarget.All, false,false);
         }
         else if (PhotonNetwork.IsMasterClient && state == GameState.Ready)
         {
@@ -315,7 +484,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
             }
             listCard.Sort(delegate (CardData x, CardData y)
             {
-                return Random.RandomRange(-1, 2);
+                return UnityEngine.Random.Range(-1, 2);
             });
             Player player = PhotonNetwork.MasterClient;          
             for (int i = 0; i < PhotonNetwork.CurrentRoom.PlayerCount; i++)
@@ -327,12 +496,13 @@ public class GameManager1 : MonoBehaviourPunCallbacks
 
             }
             //var json = JsonConvert.SerializeObject(listCard);
-            view.RPC(nameof(ChangeTurn), RpcTarget.All,false);
+            view.RPC(nameof(ChangeTurn), RpcTarget.All,false,false);
+            playBtn.gameObject.SetActive(false);
 
         }
         else
         {
-            notifyTxt.text = "Đừng vội =))";
+            notifyTxt.text = "Waiting others player";
         }
     }
     /// <summary>
@@ -340,38 +510,70 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     /// </summary>
     private float posY;
     Dictionary<Card,Vector3> ableUndoListCard = new Dictionary<Card, Vector3>();
+    private TrackableId anchorPosID;
+    private bool isSetAnchor = false;
+    private bool checkAnchor = false;
+
     private void TransformCardSelected()
     {
         ableUndoListCard.Clear();
-        var RandomPos = new Vector3(Random.RandomRange(-0.2f, 0.2f), posY, Random.RandomRange(-0.2f, 0.2f));
+        var RandomPos = new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), posY, UnityEngine.Random.Range(-0.2f, 0.2f));
         for(int i = 0; i< listCardsSelected.Count; i++)
         {
             ableUndoListCard.Add(listCardsSelected[i], listCardsSelected[i].transform.localPosition);
             var newPos = table.transform.position + new Vector3(0, i * 0.0005f, 0.03f * i) + RandomPos;
             listCardsSelected[i].cardState = CardState.Disable;
-            listCardsSelected[i].transform.DOMove(newPos, 2);
-            listCardsSelected[i].transform.DORotate(new Vector3(0, 90, 0), 2);
+            Sequence mySequence = DOTween.Sequence();
+            mySequence.Append(listCardsSelected[i].transform.DOMove(newPos, 2));
+            mySequence.Insert(0, listCardsSelected[i].transform.DORotate(new Vector3(0, 90, 0), 2));
+            listCardsSelected[i].HandleSelect();
+/*            mySequence.AppendCallback(() =>
+            {
+                listCardsSelected[i].transform.SetParent(table.transform);
+                Debug.Log("bay121321313");
+            });*/
+            /* mySequence.onComplete += () =>
+             {
+                 listCardsSelected[i].transform.SetParent(table.transform);
+                 Debug.Log("bay121321313");
+             };*/
+            //StartCoroutine(HandleSelectedCard(2f, listCardsSelected[i]));
+
+            //listCardsSelected[i].transform.DOMove(newPos, 2);
+            //listCardsSelected[i].transform.DORotate(new Vector3(0, 90, 0), 2);
+            //listCardsSelected[i].transform.SetParent(table.transform);
 
         }
         posY += 0.01f;
         countCard -= listCardsSelected.Count;
         if(countCard == 0)
         {
-            PhotonNetwork.LocalPlayer.CustomProperties["Rank"] = rank;
+            //PhotonNetwork.LocalPlayer.CustomProperties["Rank"] = rank;
             view.RPC(nameof(ChoseRank), RpcTarget.All, PhotonNetwork.LocalPlayer,rank,false);
 
         }
+        undoBtn.gameObject.SetActive(true);
     }
     public void UndoCard()
     {
-        var index = turn - 1 >= 0 ? turn - 1 : playerID.Count -1;
-        if(playerID[index] == PhotonNetwork.LocalPlayer.UserId)
+        var index = turn - 1 >= 0 ? turn - 1 : listPlayerId.Count -1;
+        if(listPlayerId[index] == PhotonNetwork.LocalPlayer.UserId)
         {
             foreach(var card in ableUndoListCard)
             {
-                card.Key.transform.localPosition = new Vector3(card.Value.x,card.Value.y,card.Value.z - 0.05f);
-                card.Key.transform.localEulerAngles = Vector3.zero;
                 card.Key.cardState = CardState.Normal;
+                card.Key.HandleSelect();
+                Sequence mysequence = DOTween.Sequence();
+/*                mysequence.AppendCallback(() =>
+                {
+                    card.Key.transform.SetParent(pointSpawn.transform);
+                    Debug.Log("undo121321313");
+                });
+              */
+                //card.Key.HandleSelect();
+                mysequence.Append(card.Key.transform.DOLocalMove(new Vector3(card.Value.x,card.Value.y,0),0.1f));
+                mysequence.Append(card.Key.transform.DOLocalRotate(Vector3.zero, 0.1f));
+                //card.Key.transform.localEulerAngles = Vector3.zero;
             }
             if(countCard == 0)
             {
@@ -384,14 +586,15 @@ public class GameManager1 : MonoBehaviourPunCallbacks
                 countCard += ableUndoListCard.Count;
             }
             ableUndoListCard.Clear();
-            view.RPC(nameof(ChangeTurn), RpcTarget.All, true);
+            state = GameState.Playing;
+            view.RPC(nameof(ChangeTurn), RpcTarget.All, true,false);
         }
     }
     [PunRPC]
     public void ChangeState(GameState st)
     {
         state = st;
-        notifyTxt.text = "Change state to " + st.ToString();
+       // notifyTxt.text = "Change state to " + st.ToString();
     }
     [PunRPC]
     public void ChoseRank(Player id,string r,bool isRevert)
@@ -447,21 +650,21 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     {
         if(isAdd)
         {
-            if (playerID.Contains(id))
+            if (listPlayerId.Contains(id))
                 return;
-            playerID.Add(id);
+            listPlayerId.Add(id);
         }
         else
         {
-            if (playerID.Contains(id))
-                playerID.Remove(id);
+            if (listPlayerId.Contains(id))
+                listPlayerId.Remove(id);
         }
     }
 
     [PunRPC]
     public void EndGame()
     {
-        state = GameState.End;
+        //state = GameState.End;
         notifyTxt.text = "Endgame";
         PhotonNetwork.CurrentRoom.IsOpen = true;
         PhotonNetwork.CurrentRoom.IsVisible = true;
@@ -474,6 +677,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         if(PhotonNetwork.IsMasterClient)
         {
             view.RPC(nameof(InitGame), RpcTarget.All);
+            playBtn.SetActive(true);
         }
     }
     [PunRPC]
@@ -481,6 +685,14 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     {
         listRank.Clear();
         ableUndoListCard.Clear();
+        foreach (var c in GameObject.FindGameObjectsWithTag("Card"))
+        {
+            Destroy(c);
+        }
+        foreach (var c in GameObject.FindGameObjectsWithTag("PointSpawn"))
+        {
+            Destroy(c);
+        }
         if (PhotonNetwork.CurrentRoom.PlayerCount == 1)
         {
             state = GameState.Waiting;
@@ -490,7 +702,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
             state = GameState.Ready;
         }
         endGamePnl.SetActive(false);
-        foreach(var sp in GameObject.FindGameObjectsWithTag("PointSpawn"))
+        foreach (var sp in GameObject.FindGameObjectsWithTag("PointSpawn"))
         {
             Destroy(sp);
         }
@@ -501,7 +713,16 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         listCard.Clear();
         turn = -1;
         wall.enabled = true;
-        
+        listPlayerId.Clear();
+        foreach(var player in PhotonNetwork.CurrentRoom.Players)
+        {
+            listPlayerId.Add(player.Value.UserId);
+        }
+        listPlayerId.Sort();
+        notifyTxt.text = "...";
+        PhotonNetwork.CurrentRoom.IsOpen = true;
+        PhotonNetwork.CurrentRoom.IsVisible = true;
+
     }
     public void HomeBtn()
     {

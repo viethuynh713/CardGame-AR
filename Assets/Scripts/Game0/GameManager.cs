@@ -7,6 +7,8 @@ using UnityEngine.UI;
 using Photon.Realtime;
 using System.Collections;
 using DG.Tweening;
+using System;
+using UnityEngine.XR.ARSubsystems;
 
 public enum GameState
 {
@@ -17,6 +19,7 @@ public enum GameState
 }
 public class GameManager : MonoBehaviourPunCallbacks
 {
+
     public static GameManager instance;
     [Header("UI")]
     [SerializeField] private Text notifyTxt;
@@ -24,14 +27,17 @@ public class GameManager : MonoBehaviourPunCallbacks
     [SerializeField] private Text countPlayer;
     [SerializeField] private RawImage targetCardImg;
     [SerializeField] private Button restartBtn;
+    [SerializeField] private Button playBtn;
 
     [Header("Prefabs")]
     public GameObject table;
 
     [Header("AR component")]
-    [SerializeField] private ARRaycastManager arRaycatManager;
+    [SerializeField] private ARRaycastManager arRaycastManager;
     private List<ARRaycastHit> hits;
     [SerializeField] private Camera ARcamera;
+    [SerializeField] private ARAnchorManager arAnchorManager;
+    [SerializeField] private ARPlaneManager arPlaneManager;
     [Header("Network")]
     private PhotonView view;
 
@@ -43,15 +49,31 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     private bool isMasterTurn;
     private bool isWating;
+    private List<Card> listAllCard = new List<Card>();
+    private bool checkAnchor = false;
+
+    [SerializeField] private GameObject cameraOffset;
+    private TrackableId anchorPosID;
+    private bool isSetAnchor = false;
+    [SerializeField]private GameObject flagPrefab;
 
     private void Awake()
     {
+        if(instance == null)
         instance = this;
     }
-
-
+    [PunRPC]
+    public void SetCameraOffset(byte[] id1, byte[] id2)
+    {
+        anchorPosID = new TrackableId(BitConverter.ToUInt64(id1), BitConverter.ToUInt64(id2));
+        notifyTxt.text = "Set ID successfully";
+    }
     private void Start()
     {
+        if(!PhotonNetwork.IsMasterClient)
+        {
+            playBtn.gameObject.SetActive(false);
+        }
         restartBtn.gameObject.SetActive(false);
         isMasterTurn = true;
         view = gameObject.GetComponent<PhotonView>();
@@ -60,12 +82,37 @@ public class GameManager : MonoBehaviourPunCallbacks
         roomNameTxt.text = PhotonNetwork.CurrentRoom.Name;
         countPlayer.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString() + "/" + PhotonNetwork.CurrentRoom.MaxPlayers.ToString();
         ClearOldCard();
+        arPlaneManager.planesChanged += ArPlaneManager_planesChanged;
 
 
     }
+    
+    private void ArPlaneManager_planesChanged(ARPlanesChangedEventArgs obj)
+    {
+/*        Debug.Log("Gen plane");
+        if (!isSetAnchor)
+        {
+            var anchorPos = arAnchorManager.GetAnchor(anchorPosID);
+            if (anchorPos != null)
+            {
+                cameraOffset.transform.position = anchorPos.transform.position;
+                cameraOffset.transform.rotation = anchorPos.transform.rotation;
+
+                Instantiate(flagPrefab, anchorPos.transform);
+                notifyTxt.text += " - OK";
+
+                isSetAnchor = true;
+            }
+            *//*            else
+                        {
+                            notifyTxt.text = "AnchorPos null";
+                        }*//*
+        }*/
+    }
+
     IEnumerator CreateTable()
     {
-        while(GameObject.FindGameObjectWithTag("Table") == null)
+        while (GameObject.FindGameObjectWithTag("Table") == null)
         {
             yield return null;
         }
@@ -73,43 +120,81 @@ public class GameManager : MonoBehaviourPunCallbacks
     }
     private void Update()
     {
+        if (!isSetAnchor)
+        {
+            var anchorPos = arAnchorManager.GetAnchor(anchorPosID);
+            if (anchorPos != null)
+            {
+                cameraOffset.transform.position = anchorPos.transform.position;
+                cameraOffset.transform.rotation = anchorPos.transform.rotation;
+                Instantiate(flagPrefab, anchorPos.transform);
+                notifyTxt.text += " - OK";
+                isSetAnchor = true;
+            }
 
+        }
+        if (PhotonNetwork.IsMasterClient && !checkAnchor)
+        {
+            if (arRaycastManager.Raycast(Camera.main.ViewportToScreenPoint(new Vector2(0.5f, 0.5f)), hits, TrackableType.Planes))
+            {
+
+                var hitPose = hits[0].pose;
+                var hitTrackableId = hits[0].trackableId;
+                var hitPlane = arPlaneManager.GetPlane(hitTrackableId);
+                var anchor = arAnchorManager.AttachAnchor(hitPlane, hitPose);
+
+                if (anchor == null)
+                {
+                    notifyTxt.text = "Error creating anchor.";
+                }
+                else
+                {
+                    anchorPosID = anchor.trackableId;
+                    notifyTxt.text = "Creating anchor.";
+                    checkAnchor = true;
+                    SetCameraOffset(BitConverter.GetBytes(anchorPosID.subId1), BitConverter.GetBytes(anchorPosID.subId2));
+                }
+            }
+
+        }
         //Debug.Log(state.ToString());
         if (PhotonNetwork.IsMasterClient && state == GameState.Ready)
         {
             Vector2 screemPos = Camera.main.ViewportToScreenPoint(new Vector2(0.5f, 0.5f));
-            if(arRaycatManager.Raycast(screemPos,hits, UnityEngine.XR.ARSubsystems.TrackableType.Planes))
+            if (arRaycastManager.Raycast(screemPos, hits, UnityEngine.XR.ARSubsystems.TrackableType.Planes))
             {
                 table.transform.position = hits[0].pose.position;
             }
         }
-        if(state == GameState.Playing)
+        if (state == GameState.Playing)
         {
+            
             if ((isMasterTurn && PhotonNetwork.IsMasterClient) || (!isMasterTurn && !PhotonNetwork.IsMasterClient))
             {
-                //if (Input.GetMouseButtonDown(0))
-                //{
-                //    Ray ray = ARcamera.ScreenPointToRay(Input.mousePosition);
-                //    RaycastHit hit;
-                //    if (Physics.Raycast(ray, out hit))
-                //    {
-                //        var cardSelected = hit.collider.GetComponent<Card>();
-                //        Debug.Log(cardSelected);
-                //        if (cardSelected != null)
-                //        {
-                //            cardSelected.view.RPC("FlipUp", RpcTarget.All);
-                //            //cardSelected.Flip();
-                //            //Debug.Log(target.rank + target.suit + "--" + cardSelected.rank + cardSelected.suit);
-                //            StartCoroutine(CompareWithTargetCard(cardSelected));
-                //        }
-                //    }
-                //}
+//#if UNITY_EDITOR
+/*                if (Input.GetMouseButtonDown(0))
+                {
+                    Ray ray = ARcamera.ScreenPointToRay(Input.mousePosition);
+                    RaycastHit hit;
+                    if (Physics.Raycast(ray, out hit))
+                    {
+                        var cardSelected = hit.collider.GetComponent<Card>();
+                        Debug.Log(cardSelected);
+                        if (cardSelected != null)
+                        {
+                            cardSelected.view.RPC("FlipUp", RpcTarget.All);
+                            //cardSelected.Flip();
+                            //Debug.Log(target.rank + target.suit + "--" + cardSelected.rank + cardSelected.suit);
+                            StartCoroutine(CompareWithTargetCard(cardSelected));
+                        }
+                    }
+                }*/
+//#endif
                 if (!isWating && Input.touchCount > 0)
                 {
                     Touch touch = Input.GetTouch(0);
                     if (touch.phase == TouchPhase.Began)
                     {
-                        //Debug.Log("1211212121");
                         Ray ray = ARcamera.ScreenPointToRay(touch.position);
                         RaycastHit hit;
                         if (Physics.Raycast(ray, out hit))
@@ -118,8 +203,6 @@ public class GameManager : MonoBehaviourPunCallbacks
                             Debug.Log(cardSelected);
                             if (cardSelected != null)
                             {
-                                Debug.Log("Touch");
-                                //cardSelected.FlipUp();
                                 cardSelected.view.RPC("FlipUp", RpcTarget.MasterClient);
                                 //cardSelected.Flip();
                                 //Debug.Log(target.rank + target.suit + "--" + cardSelected.rank + cardSelected.suit);
@@ -138,7 +221,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         isMasterTurn = !isMasterTurn;
         if ((isMasterTurn && PhotonNetwork.IsMasterClient) || (!isMasterTurn && !PhotonNetwork.IsMasterClient))
         {
-            notifyTxt.text = "Your turn ..";
+            notifyTxt.text = "Your turn ...";
         }
         else
         {
@@ -149,13 +232,13 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         isWating = true;
         yield return new WaitForSeconds(1f);
-        if(target.suit == selected.suit && target.rank == selected.rank)
+        if (target.rank == selected.rank && target.suit == selected.suit)
         {
-            
+
             view.RPC("ChangeState", RpcTarget.All, GameState.End);
             //Debug.Log("End Game");
             notifyTxt.text = "You win";
-            if(PhotonNetwork.IsMasterClient)
+            if (PhotonNetwork.IsMasterClient)
                 restartBtn.gameObject.SetActive(true);
             view.RPC(nameof(EndGame), RpcTarget.Others);
         }
@@ -170,13 +253,14 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
-        if(PhotonNetwork.CurrentRoom.PlayerCount == 2)
+        if (PhotonNetwork.CurrentRoom.PlayerCount == 2)
         {
             state = GameState.Ready;
             //view.RPC("ChangeState", RpcTarget.All, GameState.Ready);
         }
         notifyTxt.text = "Player " + newPlayer.NickName + " joined";
         countPlayer.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString() + "/" + PhotonNetwork.CurrentRoom.MaxPlayers.ToString();
+        view.RPC(nameof(SetCameraOffset), newPlayer, BitConverter.GetBytes(anchorPosID.subId1), BitConverter.GetBytes(anchorPosID.subId2));
     }
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
@@ -184,11 +268,12 @@ public class GameManager : MonoBehaviourPunCallbacks
         notifyTxt.text = "Player " + otherPlayer.NickName + "leave";
         view.RPC(nameof(ClearOldCard), RpcTarget.All);
         state = GameState.Waiting;
+        playBtn.gameObject.SetActive(true);
         countPlayer.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString() + "/" + PhotonNetwork.CurrentRoom.MaxPlayers.ToString();
     }
     public void StartBtn()
     {
-        if(PhotonNetwork.IsMasterClient && state == GameState.Ready)
+        if (PhotonNetwork.IsMasterClient && state == GameState.Ready)
         {
             //state = GameState.Playing;
             view.RPC("ChangeState", RpcTarget.All, GameState.Playing);
@@ -197,36 +282,42 @@ public class GameManager : MonoBehaviourPunCallbacks
             table.GetComponent<InitBoard>().Init();
             var idx = UnityEngine.Random.RandomRange(0, listCard.Count);
             view.RPC(nameof(SetTargetCard), RpcTarget.All, listCard[idx].suit, listCard[idx].rank);
+            playBtn.gameObject.SetActive(false);
             //target = listCard[UnityEngine.Random.RandomRange(0, listCard.Count)];
             Debug.Log(target.rank + target.suit);
         }
-        else
+        else 
         {
-            notifyTxt.text = "Đừng vội =))";
+            notifyTxt.text = "Waiting others player join";
         }
     }
 
     private void RandomListCard()
     {
-        listCard.Clear();
-        while(listCard.Count != 32)
+        foreach(var r in ranks)
         {
-            string s = suits[UnityEngine.Random.RandomRange(0, suits.Length)];
-            string r = ranks[UnityEngine.Random.RandomRange(0, ranks.Length)];
-            var card = new Card(s, r);
-            if (listCard.Contains(card)) continue;
-            listCard.Add(card);
+            foreach(var s in suits)
+            {
+                listAllCard.Add(new Card(s, r));
+            }
         }
+        listCard.Clear();
+        while (listCard.Count != 32)
+        {
+            var card = listAllCard[UnityEngine.Random.RandomRange(0, listAllCard.Count)];
+            listCard.Add(card);
+            listAllCard.Remove(card);
+        }
+        listAllCard.Clear();
     }
     [PunRPC]
-    public void SetTargetCard(string suit,string rank)
+    public void SetTargetCard(string suit, string rank)
     {
-        //-90/-100/0
+        //Animation
         targetCardImg.GetComponent<RectTransform>().DORotate(new Vector3(0, -180, 0), 0);
-        //targetCardImg.GetComponent<RectTransform>().DOAnchorPos(new Vector2(-400, -400), 0);
         Sequence sq = DOTween.Sequence();
         sq.Append(targetCardImg.GetComponent<RectTransform>().DOAnchorPos(new Vector2(-400, -400), 1.5f));
-        sq.Insert(0,targetCardImg.GetComponent<RectTransform>().DOScale(new Vector3(3,3,3), 1.5f));
+        sq.Insert(0, targetCardImg.GetComponent<RectTransform>().DOScale(new Vector3(3, 3, 3), 1.5f));
         sq.Append(targetCardImg.GetComponent<RectTransform>().DORotate(new Vector3(0, -90, 0), 0.2f));
         sq.AppendCallback(() =>
         {
@@ -245,13 +336,17 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         state = st;
         Debug.Log("Change state");
-        notifyTxt.text = st.ToString();
+        if(st == GameState.Ready)
+        {
+
+            notifyTxt.text = "All player are ready";
+        }
     }
     [PunRPC]
     public void EndGame()
     {
         notifyTxt.text = "You lose !!";
-        if(PhotonNetwork.IsMasterClient)
+        if (PhotonNetwork.IsMasterClient)
             restartBtn.gameObject.SetActive(true);
 
     }
@@ -264,7 +359,6 @@ public class GameManager : MonoBehaviourPunCallbacks
     public void RestartGame()
     {
         if (PhotonNetwork.IsMasterClient)
-
         {
             restartBtn.gameObject.SetActive(false);
             isMasterTurn = true;
@@ -278,7 +372,9 @@ public class GameManager : MonoBehaviourPunCallbacks
             {
                 //state = GameState.Waiting;
                 view.RPC(nameof(ChangeState), RpcTarget.All, GameState.Waiting);
+                playBtn.gameObject.SetActive(true);
             }
+
             view.RPC(nameof(ClearOldCard), RpcTarget.All);
         }
 

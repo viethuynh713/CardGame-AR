@@ -17,9 +17,9 @@ MonoBehaviour:
     AppIdFusion: 
     AppIdChat: 
     AppIdVoice: 
-    AppVersion: 
+    AppVersion: 1.0
     UseNameServer: 1
-    FixedRegion: 
+    FixedRegion: eu
     Server: 
     Port: 0
     ProxyServer: 
@@ -62,6 +62,10 @@ MonoBehaviour:
   - ChoseRank
   - InitGame
   - ClearOldCard
+  - SetCameraOffset
+  - ChangeParent
+  - setParent
+  - RemoveListPlayerId
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

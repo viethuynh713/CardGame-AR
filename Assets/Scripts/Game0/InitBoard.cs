@@ -21,7 +21,7 @@ public class InitBoard : MonoBehaviour
                 obj.GetComponent<Card>().view.RPC("SetInitValue", RpcTarget.All, GameManager.instance.listCard[idx].suit,GameManager.instance.listCard[idx].rank);
 
                 //obj.transform.position = new Vector3(0, 0.85f, 0);
-                obj.GetComponent<Card>().MoveTo(new Vector3((float)((x - 1) * 0.2 + 0.1), 0.2f, (float)((z - 1) * 0.3 + 0.15)));
+                obj.GetComponent<Card>().MoveLocalTo(new Vector3((float)((x - 1) * 0.2 + 0.1), 0.2f, (float)((z - 1) * 0.3 + 0.15)));
             }
         }
     }

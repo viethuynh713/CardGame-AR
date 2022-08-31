@@ -1,0 +1,6 @@
+{
+    "name": "Test_Runtimr",
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}

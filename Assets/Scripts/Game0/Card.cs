@@ -16,17 +16,19 @@ public class Card : MonoBehaviour
     public string rank;
     public CardState cardState;
     public PhotonView view;
+    public PhotonTransformView mytransform;
     private void Awake()
     {
         cardState = CardState.Normal;
         view = gameObject.GetComponent<PhotonView>();
+        mytransform = gameObject.GetComponent<PhotonTransformView>();
     }
     public Card(string suit,string rank)
     {
         this.suit = suit;
         this.rank = rank;
     }
-    public void MoveTo(Vector3 pos)
+    public void MoveLocalTo(Vector3 pos)
     {
         transform.DOLocalMove(pos, 2f).SetEase(Ease.OutCubic);
     }
@@ -67,34 +69,45 @@ public class Card : MonoBehaviour
         
     }
 
-    public override bool Equals(object other)
+  /*  public static bool operator ==(Card lhs, Card rhs)
     {
-        if(other.GetType().Equals(this.GetType()))
-        {
-            Card c = (Card)other;
-            return (c.suit == this.suit && c.rank == this.rank);
-        }
+        if (lhs == null || rhs == null) return false;
+        if (lhs.rank == rhs.rank && lhs.suit == rhs.suit) return true;
         return false;
     }
-
-    public override int GetHashCode()
+    public static bool operator !=(Card lhs,Card rhs)
     {
-        return base.GetHashCode();
-    }
-
-    public override string ToString()
-    {
-        return base.ToString();
-    }
+        if (lhs == null || rhs == null) return false;
+        if (lhs.rank != rhs.rank || lhs.suit != rhs.suit) return true;
+        return false;
+    }*/
     public void HandleSelect()
     {
         if(cardState == CardState.Selected)
         {
-            transform.DOLocalMoveZ(transform.localPosition.z + 0.05f, 0.5f);
+            transform.DOLocalMoveZ(0.05f, 0.5f);
         }
         else
         {
-            transform.DOLocalMoveZ(transform.localPosition.z - 0.05f, 0.5f);
+            transform.DOLocalMoveZ(0, 0.5f);
         }
+        var nameofPoint = GameManager1.instance.pointSpawn.name;
+        view.RPC(nameof(setParent),RpcTarget.All, nameofPoint, cardState);
     }
+    [PunRPC]
+    public void setParent(string name,CardState state)
+    {
+        if(state == CardState.Disable)
+        {
+            transform.SetParent(PhotonView.Find(GameManager1.instance.table.GetPhotonView().ViewID).transform);
+            Debug.Log(PhotonView.Find(GameManager1.instance.table.GetPhotonView().ViewID));
+        }
+        else
+        {
+            transform.SetParent(GameObject.Find(name).transform);
+
+        }
+
+    }
+
 }
