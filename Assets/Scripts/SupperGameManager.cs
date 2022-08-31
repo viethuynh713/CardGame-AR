@@ -59,6 +59,7 @@ public class SupperGameManager : MonoBehaviour
             nameofPlayer = nameInF.text;*/
         //SceneManager.LoadScene("Lobby");
     }
+    
     public void BackMenu()
     {
         KindOfGame = "";
@@ -73,4 +74,5 @@ public class SupperGameManager : MonoBehaviour
             i++;
         }
     }
+
 }
