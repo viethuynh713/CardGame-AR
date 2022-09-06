@@ -28,6 +28,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     [SerializeField] private RawImage targetCardImg;
     [SerializeField] private Button restartBtn;
     [SerializeField] private Button playBtn;
+    [SerializeField] private Text rankTxt;
 
     [Header("Prefabs")]
     public GameObject table;
@@ -63,17 +64,21 @@ public class GameManager : MonoBehaviourPunCallbacks
         instance = this;
     }
     [PunRPC]
-    public void SetCameraOffset(byte[] id1, byte[] id2)
+/*    public void SetCameraOffset(byte[] id1, byte[] id2)
     {
         anchorPosID = new TrackableId(BitConverter.ToUInt64(id1), BitConverter.ToUInt64(id2));
-        notifyTxt.text = "Set ID successfully";
-    }
+        notifyTxt.text = anchorPosID.ToString();
+        isSetAnchor = false;
+        //notifyTxt.text = "Set ID successfully";
+    }*/
     private void Start()
     {
         if(!PhotonNetwork.IsMasterClient)
         {
             playBtn.gameObject.SetActive(false);
         }
+        
+        rankTxt.gameObject.SetActive(false);
         restartBtn.gameObject.SetActive(false);
         isMasterTurn = true;
         view = gameObject.GetComponent<PhotonView>();
@@ -82,7 +87,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         roomNameTxt.text = PhotonNetwork.CurrentRoom.Name;
         countPlayer.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString() + "/" + PhotonNetwork.CurrentRoom.MaxPlayers.ToString();
         ClearOldCard();
-        arPlaneManager.planesChanged += ArPlaneManager_planesChanged;
+        //arPlaneManager.planesChanged += ArPlaneManager_planesChanged;
 
 
     }
@@ -120,16 +125,23 @@ public class GameManager : MonoBehaviourPunCallbacks
     }
     private void Update()
     {
-        if (!isSetAnchor)
+        /*if (!isSetAnchor)
         {
+            //notifyTxt.text = "set anchor";
             var anchorPos = arAnchorManager.GetAnchor(anchorPosID);
+            Debug.Log(anchorPos);
             if (anchorPos != null)
             {
                 cameraOffset.transform.position = anchorPos.transform.position;
                 cameraOffset.transform.rotation = anchorPos.transform.rotation;
                 Instantiate(flagPrefab, anchorPos.transform);
-                notifyTxt.text += " - OK";
+                notifyTxt.text += "OK";
                 isSetAnchor = true;
+            }
+            else
+            {
+                //notifyTxt.text += anchorPos;
+                //return;
             }
 
         }
@@ -149,14 +161,14 @@ public class GameManager : MonoBehaviourPunCallbacks
                 }
                 else
                 {
-                    anchorPosID = anchor.trackableId;
+                    var newanchorPosID = anchor.trackableId;
                     notifyTxt.text = "Creating anchor.";
                     checkAnchor = true;
-                    SetCameraOffset(BitConverter.GetBytes(anchorPosID.subId1), BitConverter.GetBytes(anchorPosID.subId2));
+                    SetCameraOffset(BitConverter.GetBytes(newanchorPosID.subId1), BitConverter.GetBytes(newanchorPosID.subId2));
                 }
             }
 
-        }
+        }*/
         //Debug.Log(state.ToString());
         if (PhotonNetwork.IsMasterClient && state == GameState.Ready)
         {
@@ -238,6 +250,9 @@ public class GameManager : MonoBehaviourPunCallbacks
             view.RPC("ChangeState", RpcTarget.All, GameState.End);
             //Debug.Log("End Game");
             notifyTxt.text = "You win";
+            rankTxt.gameObject.SetActive(true);
+            rankTxt.text = "You win !!";
+            rankTxt.color = Color.cyan;
             if (PhotonNetwork.IsMasterClient)
                 restartBtn.gameObject.SetActive(true);
             view.RPC(nameof(EndGame), RpcTarget.Others);
@@ -260,7 +275,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
         notifyTxt.text = "Player " + newPlayer.NickName + " joined";
         countPlayer.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString() + "/" + PhotonNetwork.CurrentRoom.MaxPlayers.ToString();
-        view.RPC(nameof(SetCameraOffset), newPlayer, BitConverter.GetBytes(anchorPosID.subId1), BitConverter.GetBytes(anchorPosID.subId2));
+        //view.RPC(nameof(SetCameraOffset), newPlayer, BitConverter.GetBytes(anchorPosID.subId1), BitConverter.GetBytes(anchorPosID.subId2));
     }
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
@@ -285,6 +300,7 @@ public class GameManager : MonoBehaviourPunCallbacks
             playBtn.gameObject.SetActive(false);
             //target = listCard[UnityEngine.Random.RandomRange(0, listCard.Count)];
             Debug.Log(target.rank + target.suit);
+            notifyTxt.text = "You turn ...";
         }
         else 
         {
@@ -346,6 +362,10 @@ public class GameManager : MonoBehaviourPunCallbacks
     public void EndGame()
     {
         notifyTxt.text = "You lose !!";
+        rankTxt.gameObject.SetActive(true);
+        rankTxt.text = "You lose !!";
+        rankTxt.color = Color.red;
+        //targetCardImg.texture = Resources.Load<Texture>("Image/BackColor_Red");
         if (PhotonNetwork.IsMasterClient)
             restartBtn.gameObject.SetActive(true);
 
@@ -361,6 +381,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         if (PhotonNetwork.IsMasterClient)
         {
             restartBtn.gameObject.SetActive(false);
+            playBtn.gameObject.SetActive(true);
             isMasterTurn = true;
             listCard.Clear();
             if (PhotonNetwork.CurrentRoom.PlayerCount == 2)
@@ -382,6 +403,8 @@ public class GameManager : MonoBehaviourPunCallbacks
     [PunRPC]
     public void ClearOldCard()
     {
+        rankTxt.gameObject.SetActive(false);
+        targetCardImg.texture = Resources.Load<Texture>("Image/BackColor_Red");
         foreach (var card in GameObject.FindGameObjectsWithTag("Card"))
         {
             Destroy(card);

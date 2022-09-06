@@ -31,61 +31,50 @@ public class ChangeColor : MonoBehaviourPunCallbacks
     {
         if (PhotonNetwork.IsMasterClient)
         {
-            view.RPC(nameof(SetCameraOffset), newPlayer, BitConverter.GetBytes(anchorPosID.subId1), BitConverter.GetBytes(anchorPosID.subId2));
+            //view.RPC(nameof(SetCameraOffset), newPlayer, BitConverter.GetBytes(anchorPosID.subId1), BitConverter.GetBytes(anchorPosID.subId2));
         }
     }
-    [PunRPC]
+/*    [PunRPC]
     public void SetCameraOffset(byte[] id1, byte[] id2)
     {
         anchorPosID = new TrackableId(BitConverter.ToUInt64(id1), BitConverter.ToUInt64(id2));
         notifyTxt.text = "Set ID successfully";
         isHasID = true;
 
-    }
+    }*/
     
     
     void Start()
     {
-        arPlaneManager.planesChanged += ArPlaneManager_planesChanged;
-        // notifyTxt = GameObject.Find("NotifyTxt").GetComponent<Text>();
+       
         hitAR = new List<ARRaycastHit>();
         arRaycastManager = GetComponent<ARRaycastManager>();
         colorSelected = new Color(UnityEngine.Random.Range(0f, 1f), UnityEngine.Random.Range(0f, 1f), UnityEngine.Random.Range(0f, 1f));
         
     }
     bool isSetAnchor = false;
-    private void ArPlaneManager_planesChanged(ARPlanesChangedEventArgs obj)
+    [PunRPC] 
+    public void SetNewTransform(Vector3 position, Vector3 rotation)
     {
-        //Debug.Log("Gen plane");
-        /*if (!isSetAnchor)
-        {
-            var anchorPos = arAnchorManager.GetAnchor(anchorPosID);
-            if (anchorPos != null)
-            {
-                cameraOffset.transform.position = anchorPos.transform.position;
-                cameraOffset.transform.rotation = anchorPos.transform.rotation;
-                Instantiate(flagPrefab, anchorPos.transform);
-                notifyTxt.text += " - OK";
-                isSetAnchor = true;
-            }
-*//*            else
-            {
-                notifyTxt.text = "AnchorPos null";
-            }*//*
-        }*/
-
+        cameraOffset.transform.position = ARcamera.transform.localPosition - position;
+        cameraOffset.transform.eulerAngles = ARcamera.transform.localEulerAngles - rotation;
+        notifyTxt.text += "Set CamOffset successfully";
     }
-
-    /// <summary>
-    /// Sets the color of the selected object to the color selected.
-    /// </summary>
-    /// <param name="p"></param>
-    /// 
+    public void ResolveAnchor()
+    {
+        if (PhotonNetwork.IsMasterClient)
+        {
+            var pos = ARcamera.transform.localPosition;
+            var rot = ARcamera.transform.localEulerAngles;
+            view.RPC(nameof(SetNewTransform), RpcTarget.Others, pos, rot);
+            notifyTxt.text = "Send offset";
+        }
+    }
     bool checkAnchor = false;
     bool isHasID = false;
     private void Update()
     {
-        if (!isSetAnchor && isHasID)
+/*        if (!isSetAnchor && isHasID)
         {
             var anchorPos = arAnchorManager.GetAnchor(anchorPosID);
             if (anchorPos != null)
@@ -121,9 +110,9 @@ public class ChangeColor : MonoBehaviourPunCallbacks
                     checkAnchor = true;
                     SetCameraOffset(BitConverter.GetBytes(anchorPosID.subId1), BitConverter.GetBytes(anchorPosID.subId2));
                 }
-            }
+            }*/
             
-        }
+        //}
         if (Input.touchCount > 0)
         {
             Touch touch = Input.GetTouch(0);

@@ -156,3 +156,4 @@ MonoBehaviour:
   rank: 
   cardState: 0
   view: {fileID: 0}
+  mytransform: {fileID: 0}

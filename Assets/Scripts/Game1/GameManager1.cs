@@ -70,14 +70,14 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         }
     }
     [PunRPC]
-    public void SetCameraOffset(byte[] id1, byte[] id2)
+    /*public void SetCameraOffset(byte[] id1, byte[] id2)
     {
         if (BitConverter.ToUInt64(id1) != 0 && BitConverter.ToUInt64(id2) != 0)
         {
             anchorPosID = new TrackableId(BitConverter.ToUInt64(id1), BitConverter.ToUInt64(id2));
-            notifyTxt.text = "Set ID successfully";
+            //notifyTxt.text = "Set ID successfully";
         }
-    }
+    }*/
     private void Start()
     {
         if(!PhotonNetwork.IsMasterClient)
@@ -120,12 +120,12 @@ public class GameManager1 : MonoBehaviourPunCallbacks
         }
         listPlayerId.Sort();
         Debug.Log(PhotonNetwork.AuthValues.UserId);
-        arPlaneManager.planesChanged += ArPlaneManager_planesChanged;
+        //arPlaneManager.planesChanged += ArPlaneManager_planesChanged;
     }
 
-    private void ArPlaneManager_planesChanged(ARPlanesChangedEventArgs obj)
+    /*private void ArPlaneManager_planesChanged(ARPlanesChangedEventArgs obj)
     {
-       /* Debug.Log("Gen plane");
+       *//* Debug.Log("Gen plane");
         if (!isSetAnchor)
         {
             var anchorPos = arAnchorManager.GetAnchor(anchorPosID);
@@ -138,8 +138,8 @@ public class GameManager1 : MonoBehaviourPunCallbacks
                 isSetAnchor = true;
             }
 
-        }*/
-    }
+        }*//*
+    }*/
 
     /*  private void NetworkingClient_EventReceived(ExitGames.Client.Photon.EventData obj)
       {
@@ -206,7 +206,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     public Vector3 endTouch;
     private void Update()
     {
-        if (!isSetAnchor)
+        /*if (!isSetAnchor)
         {
             var anchorPos = arAnchorManager.GetAnchor(anchorPosID);
             if (anchorPos != null)
@@ -214,7 +214,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
                 cameraOffset.transform.position = anchorPos.transform.position;
                 cameraOffset.transform.rotation = anchorPos.transform.rotation;
                 Instantiate(flagPrefab, anchorPos.transform);
-                notifyTxt.text += " - OK";
+                //notifyTxt.text += " - OK";
                 isSetAnchor = true;
             }
 
@@ -241,7 +241,7 @@ public class GameManager1 : MonoBehaviourPunCallbacks
                 }
             }
 
-        }
+        }*/
         if (PhotonNetwork.IsMasterClient && state == GameState.Ready)
         {
             Vector2 screemPos = Camera.main.ViewportToScreenPoint(new Vector2(0.5f, 0.5f));
@@ -424,17 +424,17 @@ public class GameManager1 : MonoBehaviourPunCallbacks
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
 
-            listPlayerId.Add(newPlayer.UserId);
-            listPlayerId.Sort();
-        
+        listPlayerId.Add(newPlayer.UserId);
+        listPlayerId.Sort();
+
         if (PhotonNetwork.CurrentRoom.PlayerCount >= 2)
         {
             view.RPC(nameof(ChangeState), RpcTarget.All, GameState.Ready);
         }
         notifyTxt.text = "Player " + newPlayer.NickName + " joined";
         countPlayer.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString() + "/" + PhotonNetwork.CurrentRoom.MaxPlayers.ToString();
-        view.RPC(nameof(SetCameraOffset), newPlayer, BitConverter.GetBytes(anchorPosID.subId1), BitConverter.GetBytes(anchorPosID.subId2));
-        
+        //view.RPC(nameof(SetCameraOffset), newPlayer, BitConverter.GetBytes(anchorPosID.subId1), BitConverter.GetBytes(anchorPosID.subId2));
+
     }
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
